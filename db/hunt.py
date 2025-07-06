@@ -1,0 +1,87 @@
+from random import choice, randint
+
+from sqlmodel import Session, and_, or_, select
+
+from db import Characters, Clans, DbBrowser, Prey
+from db.exceptions import CharacterDeadException, CharacterFrozenException
+from db.injuries import DbInjuryCharacter
+from logs.logs import main_logger as logger
+from roll import roll
+
+
+class Hunt(DbBrowser):
+    prey: Prey
+    char: Characters
+    clan: Clans | None
+    session: Session
+
+    def __init__(self, char_name: str, territory: str | None = None) -> None:
+        super().__init__()
+        self.territory = territory
+        self.char_name = char_name
+        self.char = self.get_char()
+        self.clan = self.get_clan()
+        self.prey = self.get_prey()
+
+    def hunt(self) -> tuple[Prey, bool]:
+        res = self.check_success()
+        if res is False:
+            self.apply_consequences()
+        return self.prey, res
+
+    def validate_char(self):
+        if self.char.is_frozen:
+            raise CharacterFrozenException
+        if self.char.is_dead:
+            raise CharacterDeadException
+
+    def get_prey(self) -> Prey:
+        res = roll()
+        query = select(Prey).where(
+            and_(
+                Prey.rarity_max > res,
+                Prey.rarity_min <= res,
+                (
+                    or_(
+                        Prey.territory == None,
+                        Prey.territory == (self.clan.no if self.clan else -1),
+                    )
+                ),
+            )
+        )
+        poss_prey = self.session.exec(query).all()
+        prey = poss_prey[0] if len(poss_prey) == 1 else choice(poss_prey)
+        logger.debug(f"Дичь для охоты: {str(prey)}")
+        return prey
+
+    def get_char(self) -> Characters:
+        query = select(Characters).where(Characters.name == self.char_name)
+        with self.session as s:
+            return s.exec(query).one()
+
+    def get_clan(self) -> Clans | None:
+        if not self.territory:
+            return None
+        query = select(Clans).where(Clans.name.lower() == self.territory.lower())
+        with self.session as s:
+            return s.exec(query).one()
+
+    def check_success(self) -> bool:
+        stat = self.prey.stat.lower()
+        res = self.char.actual_stats["hunting"] + self.char.actual_stats[stat]
+        if self.prey.territory == self.char.clan_no:
+            res += self.char.actual_stats["faith"]
+        if self.prey.sum_required or 0 > res:
+            logger.debug(f"Охота провалилась {self.prey.sum_required or 0} > {res}")
+            return False
+        logger.debug(f"Охота успешна {self.prey.sum_required or 0} <= {res}")
+        return True
+
+    def apply_consequences(self) -> None:
+        if (
+            self.prey.injury_chance
+            and randint(1, 100) < self.prey.injury_chance
+            and self.prey.injury
+        ):
+            logger.debug(f"{self.char.name} получает ранение {self.prey.injury}")
+            DbInjuryCharacter(self.char.no, self.prey.injury).add_injury()
