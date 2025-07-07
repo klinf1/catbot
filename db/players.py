@@ -79,3 +79,9 @@ class DbPlayerConfig(DbBrowser):
             player = s.exec(query).one()
         player.is_admin = flag
         self.add(player)
+
+    def get_all_players(self):
+        query = select(Players)
+        with self.session as s:
+            players = s.exec(query).all()
+        return players

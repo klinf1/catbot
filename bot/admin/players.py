@@ -53,3 +53,18 @@ async def demote(update: Update, context: ContextTypes.DEFAULT_TYPE):
             update.effective_chat.id, "Ошибка. Тагните Клинфа."
         )
         logger.error(err)
+
+
+@admin_command
+async def view_all_players(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        palyers = DbPlayerConfig().get_all_players()
+        res = ""
+        for player in palyers:
+            res = "\n".join([res, str(player), "______"])
+        await context.bot.send_message(update.effective_chat.id, res)
+    except Exception as err:
+        await context.bot.send_message(
+            update.effective_chat.id, "Ошибка. Тагните Клинфа."
+        )
+        logger.error(err)

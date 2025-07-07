@@ -6,7 +6,8 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 
 from bot.admin.characters import add_char, add_char_help, view_chars_by_player
 from bot.admin.clans import add_clan, add_clan_help
-from bot.admin.players import ban, demote, promote, unban
+from bot.admin.injuries import add_injury, add_injury_help
+from bot.admin.players import ban, demote, promote, unban, view_all_players
 from bot.admin.prey import add_prey, add_prey_help, view_all_prey
 from bot.hunt import hunt, hunt_help
 from db.decorators import not_banned, register_player_if_not_exists
@@ -44,6 +45,9 @@ async def commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "view_chars_by_player [username]",
                     "promote [username]",
                     "demote [username]",
+                    "view_all_players",
+                    "add_injury",
+                    "add_injury_help",
                 ]
             )
     except Exception as err:
@@ -52,7 +56,6 @@ async def commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 @register_player_if_not_exists
-@not_banned
 async def health(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(update.effective_chat.id, "I'm here for you!")
 
@@ -104,5 +107,8 @@ def bot_main(token: str):
     app.add_handler(CommandHandler("view_chars_by_player", view_chars_by_player))
     app.add_handler(CommandHandler("promote", promote))
     app.add_handler(CommandHandler("demote", demote))
+    app.add_handler(CommandHandler("view_all_players", view_all_players))
+    app.add_handler(CommandHandler("add_injury", add_injury))
+    app.add_handler(CommandHandler("add_injury_help", add_injury_help))
     app.add_error_handler(error_handler)
     app.run_polling()

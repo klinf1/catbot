@@ -3,6 +3,8 @@ from sqlmodel import (CheckConstraint, Column, Field, Integer, Session,
                       SQLModel, UniqueConstraint, and_, create_engine, func,
                       select)
 
+from logs.logs import main_logger as logger
+
 engine = create_engine("sqlite:///cats.db")
 
 
@@ -84,6 +86,12 @@ class Players(SQLModel, table=True):
     is_banned: bool = Field(default=False)
     first_name: str | None = None
     last_name: str | None = None
+
+    def __str__(self) -> str:
+        return (
+            f"Игрок: {self.chat_id}\nUsername: {self.username}\nFirst name: {self.first_name}\nLast name: {self.last_name}"
+            f"\nЗабанен: {'Да' if self.is_banned else 'Нет'}\nАдмин: {'Да' if self.is_admin else 'Нет'}"
+        )
 
 
 class Seasons(SQLModel, table=True):
@@ -227,6 +235,17 @@ class InjuryStat(SQLModel, table=True):
     penalty: int = Field(sa_column=Column(Integer))
     __table_args__ = (CheckConstraint(penalty.sa_column < 0),)
 
+    @staticmethod
+    def attrs():
+        return ["hunting",
+            "agility",
+            "hearing",
+            "smell",
+            "sight",
+            "speed",
+            "stamina",
+            "strength",
+            "combat",]
 
 class Diseases(SQLModel, table=True):
     """
@@ -330,13 +349,11 @@ class Characters(SQLModel, table=True):
     def session(self):
         return Session(engine)
 
-    @computed_field
     @property
     def injuries(self) -> list:
         query = select(CharacterInjury).where(CharacterInjury.character == self.no)
         return [t for t in self.session.exec(query).all()]
 
-    @computed_field
     @property
     def traumas(self) -> list:
         query = select(CharacterDisability).where(
@@ -346,7 +363,6 @@ class Characters(SQLModel, table=True):
             traumas = [t for t in self.session.exec(query).all()]
         return traumas
 
-    @computed_field
     @property
     def diseases(self) -> list:
         query = select(CharacterDisease).where(CharacterDisease.character == self.no)
@@ -355,6 +371,7 @@ class Characters(SQLModel, table=True):
     @computed_field
     @property
     def actual_stats(self) -> dict[str, int]:
+        logger.debug(f'Получены актуальные характеристики для {self.name}')
         return {
             "hunting": self.get_actual_stat("hunting"),
             "agility": self.get_actual_stat("agility"),
@@ -375,7 +392,7 @@ class Characters(SQLModel, table=True):
         res += self.get_buffs(stat)
         res += self.get_penalties(stat)
         res -= self.hunger
-        return res if res > 0 else 0
+        return res
 
     def get_buffs(self, stat: str) -> int:
         # res = self.__getattribute__(stat)

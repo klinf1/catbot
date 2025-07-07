@@ -37,22 +37,14 @@ class DbInjuryConfigure(DbBrowser):
 
     def add_new_injury(self, name: str, penalties: dict[str, int]):
         query_inj = Injuries(name=name)
-        with self.session as s:
-            s.add(query_inj)
+        self.add(query_inj)
         self._add_injury_stats(name, penalties)
-        self.commit()
 
     def delete_injury(self, name: str | None = None):
         inj = select(Injuries).where(Injuries.name == name)
         with self.session as s:
             inj = s.exec(inj).one()
         self.delete(inj)
-
-    def add_new_stat_penalty(self, no: int, new_penalties: dict[str, int]):
-        with self.session as s:
-            inj_name = s.exec(select(Injuries.name).where(Injuries.no == no)).one()
-        self._add_injury_stats(inj_name, new_penalties)  # type: ignore
-        self.commit()
 
     def edit_injury(
         self, no: int, name: str | None = None, penalties: dict[str, int] = {}
@@ -68,7 +60,6 @@ class DbInjuryConfigure(DbBrowser):
             with self.session as s:
                 inj_stats = s.exec(inj_stats).all()
             self._edit_router(no, penalties, inj_stats)
-        self.commit()
 
     def _edit_router(self, no: int, penalties: dict[str, int], existing_stats):
         existing_pens = [stat for stat in existing_stats]
@@ -93,14 +84,13 @@ class DbInjuryConfigure(DbBrowser):
             with self.session as s:
                 inj_stat = s.exec(inj_stat).one()
                 inj_stat.penalty = value
-                self.session.add(inj_stat)
+                self.add(inj_stat)
 
     def _add_injury_stats(self, name: str, penalties: dict):
         inj = self.get_injury_by_name(name=name)
         for key, value in penalties.items():
             query_stat = InjuryStat(issue=inj.no, stat=key, penalty=value)  # type: ignore
-            with self.session as s:
-                s.add(query_stat)
+            self.add(query_stat)
 
     def _delete_injury_stats(self, no: int, to_delete: list[str]):
         for stat in to_delete:
@@ -109,7 +99,7 @@ class DbInjuryConfigure(DbBrowser):
             )
             with self.session as s:
                 stat_to_delete = s.exec(query).one()
-            s.delete(stat_to_delete)
+            self.delete(stat_to_delete)
 
     def get_injury_by_no(self, no: int):
         query = select(Injuries).where(Injuries.no == no)

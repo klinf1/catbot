@@ -77,6 +77,12 @@ class DbCharacterConfig(DbBrowser):
             char = s.exec(query).one()
         return True if char.clan_no == clan else False
 
+    def get_all_chars(self):
+        query = select(Characters)
+        with self.session as s:
+            chars = s.exec(query).all()
+        return chars
+
     @staticmethod
     def _edit_single_stat(char: Characters, stat: str, value: Any):
         setattr(char, stat, value)

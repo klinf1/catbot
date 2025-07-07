@@ -7,6 +7,7 @@ from db.exceptions import CharacterDeadException, CharacterFrozenException
 from db.injuries import DbInjuryCharacter
 from logs.logs import main_logger as logger
 from roll import roll
+from sqlite3 import IntegrityError
 
 
 class Hunt(DbBrowser):
@@ -39,7 +40,7 @@ class Hunt(DbBrowser):
         res = roll()
         query = select(Prey).where(
             and_(
-                Prey.rarity_max > res,
+                Prey.rarity_max >= res,
                 Prey.rarity_min <= res,
                 (
                     or_(
@@ -84,4 +85,7 @@ class Hunt(DbBrowser):
             and self.prey.injury
         ):
             logger.debug(f"{self.char.name} получает ранение {self.prey.injury}")
-            DbInjuryCharacter(self.char.no, self.prey.injury).add_injury()
+            try:
+                DbInjuryCharacter(self.char.no, self.prey.injury).add_injury()
+            except IntegrityError as err:
+                logger.debug(f"Повторное ранение {self.prey.injury} для {self.char.name}, игнорирую")

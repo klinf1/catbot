@@ -62,3 +62,18 @@ async def view_chars_by_player(update: Update, context: ContextTypes.DEFAULT_TYP
             update.effective_chat.id, "Ошибка. Тагните Клинфа."
         )
         logger.error(err)
+
+
+@admin_command
+async def view_all_chars(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        chars = DbCharacterConfig().get_all_chars()
+        res = ""
+        for char in chars:
+            res = "\n".join([res, str(char), "______"])
+        await context.bot.send_message(update.effective_chat.id, res)
+    except Exception as err:
+        await context.bot.send_message(
+            update.effective_chat.id, "Ошибка. Тагните Клинфа."
+        )
+        logger.error(err)
