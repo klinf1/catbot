@@ -1,57 +1,40 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from bot.command_base import CommandBase
 from db import Prey
-from db.decorators import admin_command
 from db.prey import DbPreyConfig
-from logs.logs import main_logger as logger
 from utils import prepare_for_db
 
 
-@admin_command
-async def add_prey(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        text = update.message.text.replace("/add_prey", "")
+class PreyCommandHandler(CommandBase):
+    def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        super().__init__(update, context)
+        self.prey_db = DbPreyConfig()
+
+    async def add_prey(self):
         params_dict = {}
-        name, params_str = text.strip().split("\n", 1)
+        name, params_str = self.text.strip().split("\n", 1)
         params_list = params_str.strip().split("\n")
         params_dict.update({"name": name})
         for item in params_list:
             col, value = prepare_for_db(item.strip().split(":", 1))
             if col and value and col in Prey.attrs():
                 params_dict.update({col.strip(): value.strip()})
-        DbPreyConfig().add_new_prey(params_dict)
-        await context.bot.send_message(
-            update.effective_chat.id, f"Дичь {name} добавлена успешно!"
+        self.prey_db.add_new_prey(params_dict)
+        await self.context.bot.send_message(
+            self.chat_id, f"Дичь {name} добавлена успешно!"
         )
-    except Exception as err:
-        await context.bot.send_message(
-            update.effective_chat.id, "Ошибка. Тагните Клинфа."
+
+    async def add_prey_help(self):
+        attrs = "\n".join(Prey.attrs())
+        text = (
+            "Это комманда для добавления нового вида дичи! "
+            "Необходимо через пробел ввести его название, и далее через перенос строки атрибуты в формате атрибут:значение\n"
         )
-        logger.error(err)
+        text += f"Список атрибутов дичи, которые можно задать:\n{attrs}"
+        await self.context.bot.send_message(self.chat_id, text)
 
-
-@admin_command
-async def add_prey_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    attrs = "\n".join(Prey.attrs())
-    text = (
-        "Это комманда для добавления нового вида дичи! "
-        "Необходимо через пробел ввести его название, и далее через перенос строки атрибуты в формате атрибут:значение\n"
-    )
-    text += f"Список атрибутов дичи, которые можно задать:\n{attrs}"
-    await context.bot.send_message(update.effective_chat.id, text)
-
-
-@admin_command
-async def view_all_prey(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
+    async def view_all_prey(self):
         all_prey = DbPreyConfig().get_all_prey()
-        res = ""
-        for prey in all_prey:
-            res = "\n".join([res, str(prey), "______"])
-        await context.bot.send_message(update.effective_chat.id, res)
-    except Exception as err:
-        await context.bot.send_message(
-            update.effective_chat.id, "Ошибка. Тагните Клинфа."
-        )
-        logger.error(err)
+        await self.view_list_from_db(all_prey)

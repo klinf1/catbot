@@ -1,4 +1,5 @@
 from random import choice, randint
+from sqlite3 import IntegrityError
 
 from sqlmodel import Session, and_, or_, select
 
@@ -7,7 +8,6 @@ from db.exceptions import CharacterDeadException, CharacterFrozenException
 from db.injuries import DbInjuryCharacter
 from logs.logs import main_logger as logger
 from roll import roll
-from sqlite3 import IntegrityError
 
 
 class Hunt(DbBrowser):
@@ -88,4 +88,6 @@ class Hunt(DbBrowser):
             try:
                 DbInjuryCharacter(self.char.no, self.prey.injury).add_injury()
             except IntegrityError as err:
-                logger.debug(f"Повторное ранение {self.prey.injury} для {self.char.name}, игнорирую")
+                logger.debug(
+                    f"Повторное ранение {self.prey.injury} для {self.char.name}, игнорирую"
+                )

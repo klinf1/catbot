@@ -1,7 +1,17 @@
 from pydantic import computed_field
-from sqlmodel import (CheckConstraint, Column, Field, Integer, Session,
-                      SQLModel, UniqueConstraint, and_, create_engine, func,
-                      select)
+from sqlmodel import (
+    CheckConstraint,
+    Column,
+    Field,
+    Integer,
+    Session,
+    SQLModel,
+    UniqueConstraint,
+    and_,
+    create_engine,
+    func,
+    select,
+)
 
 from logs.logs import main_logger as logger
 
@@ -237,7 +247,8 @@ class InjuryStat(SQLModel, table=True):
 
     @staticmethod
     def attrs():
-        return ["hunting",
+        return [
+            "hunting",
             "agility",
             "hearing",
             "smell",
@@ -245,7 +256,9 @@ class InjuryStat(SQLModel, table=True):
             "speed",
             "stamina",
             "strength",
-            "combat",]
+            "combat",
+        ]
+
 
 class Diseases(SQLModel, table=True):
     """
@@ -371,7 +384,7 @@ class Characters(SQLModel, table=True):
     @computed_field
     @property
     def actual_stats(self) -> dict[str, int]:
-        logger.debug(f'Получены актуальные характеристики для {self.name}')
+        logger.debug(f"Получены актуальные характеристики для {self.name}")
         return {
             "hunting": self.get_actual_stat("hunting"),
             "agility": self.get_actual_stat("agility"),

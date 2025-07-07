@@ -1,70 +1,31 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from db.decorators import admin_command, superuser_command
+from bot.command_base import CommandBase
+from db.decorators import superuser_command
 from db.players import DbPlayerConfig
-from logs.logs import main_logger as logger
 
 
-@admin_command
-async def ban(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        text = update.message.text.replace("/ban", "").strip()
-        reply = DbPlayerConfig().ban_player(int(text))
-        await context.bot.send_message(update.effective_chat.id, reply)
-    except Exception as err:
-        await context.bot.send_message(
-            update.effective_chat.id, "Ошибка. Тагните Клинфа."
-        )
-        logger.error(err)
+class PlayerCommandHandler(CommandBase):
+    def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        super().__init__(update, context)
+        self.player_db = DbPlayerConfig()
 
+    async def ban(self):
+        reply = self.player_db.ban_player(self.text)
+        await self.context.bot.send_message(self.chat_id, reply)
 
-@admin_command
-async def unban(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        text = update.message.text.replace("/unban", "").strip()
-        DbPlayerConfig().unban_player(int(text))
-    except Exception as err:
-        await context.bot.send_message(
-            update.effective_chat.id, "Ошибка. Тагните Клинфа."
-        )
-        logger.error(err)
+    async def unban(self):
+        self.player_db.unban_player(self.text)
 
+    @superuser_command
+    async def promote(self):
+        self.player_db.promote_or_demote(self.text, True)
 
-@superuser_command
-async def promote(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        text = update.message.text.replace("/promote", "").strip()
-        DbPlayerConfig().promote_or_demote(text, True)
-    except Exception as err:
-        await context.bot.send_message(
-            update.effective_chat.id, "Ошибка. Тагните Клинфа."
-        )
-        logger.error(err)
+    @superuser_command
+    async def demote(self):
+        self.player_db.promote_or_demote(self.text, False)
 
-
-@superuser_command
-async def demote(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        text = update.message.text.replace("/demote", "").strip()
-        DbPlayerConfig().promote_or_demote(text, False)
-    except Exception as err:
-        await context.bot.send_message(
-            update.effective_chat.id, "Ошибка. Тагните Клинфа."
-        )
-        logger.error(err)
-
-
-@admin_command
-async def view_all_players(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        palyers = DbPlayerConfig().get_all_players()
-        res = ""
-        for player in palyers:
-            res = "\n".join([res, str(player), "______"])
-        await context.bot.send_message(update.effective_chat.id, res)
-    except Exception as err:
-        await context.bot.send_message(
-            update.effective_chat.id, "Ошибка. Тагните Клинфа."
-        )
-        logger.error(err)
+    async def view_all_players(self):
+        players = DbPlayerConfig().get_all_players()
+        await self.view_list_from_db(players)
