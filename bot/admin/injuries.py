@@ -11,7 +11,7 @@ from utils import prepare_for_db
 @admin_command
 async def add_injury(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        text = update.message.text.replace('/add_injury', '').strip()
+        text = update.message.text.replace("/add_injury", "").strip()
         params_dict = {}
         name, params_str = text.strip().split("\n", 1)
         params_list = params_str.strip().split("\n")
@@ -33,5 +33,6 @@ async def add_injury_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Это комманда для добавления нового ранения! "
         "Необходимо через пробел ввести его название, и далее через перенос строки характеристики в формате характеристика:штраф\n"
         f"Список характеристик, которые можно задать:\n{attrs}"
-        "\nВсе штрафы должны быть меньше 0.")
+        "\nВсе штрафы должны быть меньше 0."
+    )
     await context.bot.send_message(update.effective_chat.id, text)

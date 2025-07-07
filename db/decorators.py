@@ -31,7 +31,9 @@ def admin_command(func):
         with Session(engine) as s:
             user = s.exec(query).one()
         if user.is_admin is False and user.is_superuser is False:
-            context.chat_data.update({"admin_error": [user.chat_id, user.username]})
+            context.chat_data.update(
+                {"exc": {"admin_error": [user.chat_id, user.username]}}
+            )
             raise NoRightException("No rights!")
         return func(update, context, *args, **kwargs)
 
@@ -39,15 +41,17 @@ def admin_command(func):
 
 
 def not_banned(func):
-    def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-        tg_user = update.message.from_user
+    def wrapper(self, *args, **kwargs):
+        tg_user = self.user
         query = select(Players).where(Players.chat_id == tg_user.id)
         with Session(engine) as s:
             user = s.exec(query).one()
         if user.is_banned:
-            context.chat_data.update({"banned": [user.chat_id, user.username]})
+            self.context.chat_data.update(
+                {"exc": {"banned": [user.chat_id, user.username]}}
+            )
             raise BannedException("Banned af")
-        return func(update, context, *args, **kwargs)
+        return func(self, *args, **kwargs)
 
     return wrapper
 
@@ -59,7 +63,9 @@ def superuser_command(func):
         with Session(engine) as s:
             user = s.exec(query).one()
         if user.is_superuser is False:
-            context.chat_data.update({"superuser_error": [user.chat_id, user.username]})
+            context.chat_data.update(
+                {"exc": {"superuser_error": [user.chat_id, user.username]}}
+            )
             raise NoRightException("No rights!")
         return func(update, context, *args, **kwargs)
 

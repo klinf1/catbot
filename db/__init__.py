@@ -237,7 +237,8 @@ class InjuryStat(SQLModel, table=True):
 
     @staticmethod
     def attrs():
-        return ["hunting",
+        return [
+            "hunting",
             "agility",
             "hearing",
             "smell",
@@ -245,7 +246,9 @@ class InjuryStat(SQLModel, table=True):
             "speed",
             "stamina",
             "strength",
-            "combat",]
+            "combat",
+        ]
+
 
 class Diseases(SQLModel, table=True):
     """
@@ -371,7 +374,7 @@ class Characters(SQLModel, table=True):
     @computed_field
     @property
     def actual_stats(self) -> dict[str, int]:
-        logger.debug(f'Получены актуальные характеристики для {self.name}')
+        logger.debug(f"Получены актуальные характеристики для {self.name}")
         return {
             "hunting": self.get_actual_stat("hunting"),
             "agility": self.get_actual_stat("agility"),
