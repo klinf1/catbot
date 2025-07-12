@@ -16,7 +16,7 @@ class ClanCommandHandler(CommandBase):
         params_dict = {}
         name, params_str = self.text.strip().split("\n", 1)
         params_list = params_str.strip().split("\n")
-        params_dict.update({"name": name})
+        params_dict.update({"name": name.capitalize()})
         for item in params_list:
             col, value = prepare_for_db(item.strip().split(":", 1))
             if col and value and col in Clans.attrs():

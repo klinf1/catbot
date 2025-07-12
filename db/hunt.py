@@ -4,14 +4,14 @@ from sqlite3 import IntegrityError
 from sqlmodel import Session, and_, or_, select
 
 from db import Characters, Clans, DbBrowser, Prey
-from db.exceptions import CharacterDeadException, CharacterFrozenException
 from db.injuries import DbInjuryCharacter
+from exceptions import CharacterDeadException, CharacterFrozenException
 from logs.logs import main_logger as logger
 from roll import roll
 
 
 class Hunt(DbBrowser):
-    prey: Prey
+    prey: Prey | None
     char: Characters
     clan: Clans | None
     session: Session
@@ -24,7 +24,8 @@ class Hunt(DbBrowser):
         self.clan = self.get_clan()
         self.prey = self.get_prey()
 
-    def hunt(self) -> tuple[Prey, bool]:
+    def hunt(self) -> tuple[Prey | None, bool]:
+        self.validate_char()
         res = self.check_success()
         if res is False:
             self.apply_consequences()
@@ -36,8 +37,9 @@ class Hunt(DbBrowser):
         if self.char.is_dead:
             raise CharacterDeadException
 
-    def get_prey(self) -> Prey:
+    def get_prey(self) -> Prey | None:
         res = roll()
+        logger.debug(f"roll result for hunt: {res}")
         query = select(Prey).where(
             and_(
                 Prey.rarity_max >= res,
@@ -50,8 +52,12 @@ class Hunt(DbBrowser):
                 ),
             )
         )
-        poss_prey = self.session.exec(query).all()
-        prey = poss_prey[0] if len(poss_prey) == 1 else choice(poss_prey)
+        with self.session as s:
+            poss_prey = s.exec(query).all()
+        try:
+            prey = choice(poss_prey)
+        except IndexError:
+            prey = None
         logger.debug(f"Дичь для охоты: {str(prey)}")
         return prey
 
@@ -68,6 +74,8 @@ class Hunt(DbBrowser):
             return s.exec(query).one()
 
     def check_success(self) -> bool:
+        if not self.prey:
+            return False
         stat = self.prey.stat.lower()
         res = self.char.actual_stats["hunting"] + self.char.actual_stats[stat]
         if self.prey.territory == self.char.clan_no:

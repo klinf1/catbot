@@ -6,17 +6,15 @@ from bot.common_commands import CommonCommandHandler
 
 
 class CommandRouter:
-    common_commands = ["commands", "start", "health", "hunt", "hunt_help"]
-
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         self.command: str = update.message.text.split(" ", 1)[0].replace("/", "")  # type: ignore
-        self.common = CommonCommandHandler(update, context)
-        self.admin = AdminCommandHandler(update, context)
+        self.update = update
+        self.context = context
 
     async def route(self):
-        if self.command in self.common_commands:
-            async with self.common as c:
-                await c.route()
+        if self.command in CommonCommandHandler.__dict__:
+            async with CommonCommandHandler(self.update, self.context) as c:
+                await getattr(c, self.command)()
         else:
-            async with self.admin as c:
+            async with AdminCommandHandler(self.update, self.context) as c:
                 await c.route()

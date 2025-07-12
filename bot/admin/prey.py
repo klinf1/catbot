@@ -16,7 +16,7 @@ class PreyCommandHandler(CommandBase):
         params_dict = {}
         name, params_str = self.text.strip().split("\n", 1)
         params_list = params_str.strip().split("\n")
-        params_dict.update({"name": name})
+        params_dict.update({"name": name.capitalize()})
         for item in params_list:
             col, value = prepare_for_db(item.strip().split(":", 1))
             if col and value and col in Prey.attrs():
@@ -36,5 +36,13 @@ class PreyCommandHandler(CommandBase):
         await self.context.bot.send_message(self.chat_id, text)
 
     async def view_all_prey(self):
-        all_prey = DbPreyConfig().get_all_prey()
+        all_prey = self.prey_db.get_all_prey()
         await self.view_list_from_db(all_prey)
+
+    async def delete_prey(self):
+        prey = self.prey_db.get_prey_by_name(self.text.capitalize())
+        self.prey_db.delete(prey)
+
+    async def delete_prey_help(self):
+        text = "Это команда для удаления одного вида дичи. Необходимо ввести название через пробел."
+        await self.context.bot.send_message(self.chat_id, text)

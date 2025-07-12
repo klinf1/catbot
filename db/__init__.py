@@ -1,17 +1,8 @@
 from pydantic import computed_field
-from sqlmodel import (
-    CheckConstraint,
-    Column,
-    Field,
-    Integer,
-    Session,
-    SQLModel,
-    UniqueConstraint,
-    and_,
-    create_engine,
-    func,
-    select,
-)
+from sqlmodel import (CheckConstraint, Column, Field, Integer, Sequence,
+                      Session, SQLModel, UniqueConstraint, and_, create_engine,
+                      func, select)
+from sqlmodel.sql.expression import SelectOfScalar
 
 from logs.logs import main_logger as logger
 
@@ -167,10 +158,68 @@ class Herbs(SQLModel, table=True):
     __table_args__ = (UniqueConstraint("name", name="herbs_name_unique"),)
     no: int | None = Field(primary_key=True, default=None, index=True)
     name: str = Field(index=True)
+    territory: int | None = Field(foreign_key="clans.no", default=None)
+    sum_required: int = 0
     rarity_min: int
     rarity_max: int
     disease: int | None = Field(foreign_key="diseases.no", default=None)
     injury: int | None = Field(foreign_key="injuries.no", default=None)
+
+    @staticmethod
+    def attrs():
+        return [
+            "territory",
+            "rarity_min",
+            "rarity_max",
+            "disease",
+            "injury",
+            "sum_required",
+        ]
+
+    @property
+    def clan(self):
+        query = select(Clans).where(Clans.no == self.territory)
+        with Session(engine) as s:
+            clans = s.exec(query).one()
+        return clans
+
+    @property
+    def actual_disease(self):
+        query = select(Diseases).where(Diseases.no == self.disease)
+        with Session(engine) as s:
+            return s.exec(query).one()
+
+    @property
+    def actual_injury(self):
+        query = select(Injuries).where(Injuries.no == self.injury)
+        with Session(engine) as s:
+            return s.exec(query).one()
+
+    def __repr__(self) -> str:
+        if not self.territory:
+            terr = "любая"
+        elif self.territory == -1:
+            terr = "нейтральная"
+        else:
+            terr = self.clan.name
+        if not self.disease:
+            disease = "нет"
+        else:
+            disease = self.actual_disease.name
+        if not self.injury:
+            injury = "нет"
+        else:
+            injury = self.actual_injury.name
+        return "\n".join(
+            [
+                f"Трава: {self.name}",
+                f"Территория происхождения: {terr}",
+                f"Минимальная редкость: {self.rarity_min}",
+                f"Максимальная редкость: {self.rarity_max}",
+                f"Болезнь: {disease}",
+                f"Трама: {injury}",
+            ]
+        )
 
 
 class CharacterInventory(SQLModel, table=True):
@@ -178,16 +227,14 @@ class CharacterInventory(SQLModel, table=True):
     Table for prey in character inventory.
 
     :var int char_no: foreign key to characters.no
-    :var int slot_one: foreign key to prey.no
-    :var int slot_two: foreign key to prey.no
-    :var int slot_three: foreign key to prey.no
+    :var str type: what is this - herb or prey
+    :var int item: no from prey or herbs that is in this inventory
     """
 
     no: int | None = Field(primary_key=True, default=None, index=True)
     char_no: int | None = Field(foreign_key="characters.no", default=None)
-    slot_one: int | None = Field(foreign_key="prey.no", default=None)
-    slot_two: int | None = Field(foreign_key="prey.no", default=None)
-    slot_three: int | None = Field(foreign_key="prey.no", default=None)
+    type: str
+    item: int
 
 
 class Roles(SQLModel, table=True):
@@ -543,7 +590,7 @@ class Prey(SQLModel, table=True):
 
     def __str__(self) -> str:
         if self.territory == -1:
-            clan_name = "территория двуногихсе"
+            clan_name = "территория двуногих"
         elif not self.territory:
             clan_name = "все"
         else:
@@ -581,6 +628,14 @@ class DbBrowser:
         with self.session as s:
             s.delete(table)
             self.commit()
+
+    def select_one(self, query: SelectOfScalar):
+        with self.session as s:
+            return s.exec(query).one()
+
+    def select_many(self, query: SelectOfScalar):
+        with self.session as s:
+            return s.exec(query).all()
 
 
 def create_tables() -> None:

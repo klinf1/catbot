@@ -19,7 +19,7 @@ class ErrorHandler:
 
     async def route(self):
         for key in self.exc_dict.keys():
-            if key in  self.error_dict.keys():
+            if key in self.error_dict.keys():
                 await self.error_dict[key]()
                 break
         else:
@@ -36,7 +36,8 @@ class ErrorHandler:
             f"{self.exc_dict['banned'][1]} забанен, но очень хочет играть."  # type: ignore
         )
         await self.context.bot.send_message(
-            self.exc_dict["banned"][0], "Вы в бане!"  # type: ignore
+            self.exc_dict["banned"][0],
+            "Вы в бане!",  # type: ignore
         )
         self.context.chat_data["exc"].__delitem__("banned")  # type: ignore
 
@@ -44,11 +45,11 @@ class ErrorHandler:
         user_logger.info(
             f"{self.exc_dict['superuser_error'][1]} хотел использовать команду суперюзера!"  # type: ignore
         )
-        await self.context.bot.send_message(self.exc_dict["superuser_error"][0], 'Это команда для владельцев бота.')  # type: ignore
+        await self.context.bot.send_message(
+            self.exc_dict["superuser_error"][0], "Это команда для владельцев бота."
+        )  # type: ignore
         self.context.chat_data["exc"].__delitem__("superuser_error")  # type: ignore
 
     async def unexpected_error(self):
         main_logger.exception(self.context.error)
-        await self.context.bot.send_message(
-            self.dev_id, str(self.context.error)
-        )
+        await self.context.bot.send_message(self.dev_id, str(self.context.error))

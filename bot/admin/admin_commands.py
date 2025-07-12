@@ -1,15 +1,16 @@
 from telegram import Update
-from telegram.ext import ContextTypes
 from telegram.error import TelegramError
+from telegram.ext import ContextTypes
 
 from bot.admin.characters import CharacterCommandHandler
 from bot.admin.clans import ClanCommandHandler
+from bot.admin.herbs import HerbCommandHandler
 from bot.admin.injuries import InjuryCommandHandler
 from bot.admin.players import PlayerCommandHandler
 from bot.admin.prey import PreyCommandHandler
 from bot.command_base import CommandBase
 from db.players import DbPlayerConfig
-from db.exceptions import NoRightException
+from exceptions import NoRightException
 from logs.logs import main_logger
 
 
@@ -20,7 +21,14 @@ class AdminCommandHandler(CommandBase):
 
     @property
     def subclasses(self) -> list:
-        return [CharacterCommandHandler, PreyCommandHandler, PlayerCommandHandler, InjuryCommandHandler, ClanCommandHandler]
+        return [
+            CharacterCommandHandler,
+            PreyCommandHandler,
+            PlayerCommandHandler,
+            InjuryCommandHandler,
+            ClanCommandHandler,
+            HerbCommandHandler,
+        ]
 
     async def __aenter__(self):
         main_logger.debug(

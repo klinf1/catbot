@@ -1,7 +1,7 @@
 from sqlmodel import Session, select
 
 from db import Players, engine
-from db.exceptions import BannedException, NoRightException
+from exceptions import BannedException, NoRightException
 
 
 def not_banned(func):
