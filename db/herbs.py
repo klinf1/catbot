@@ -27,8 +27,8 @@ class HerbUser(DbBrowser):
         )
         self.herb = self.get_herb()
 
-    def gather(self):
-        return [self.herb, self.check_success()]
+    def gather(self) -> tuple[Herbs | None, bool]:
+        return self.herb, self.check_success()
 
     def get_herb(self) -> Herbs | None:
         res = roll()
