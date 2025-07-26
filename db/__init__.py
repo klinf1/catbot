@@ -108,6 +108,7 @@ class Seasons(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
     name: str = Field(index=True)
     hunt_attempts: int
+    herb_attempts: int
     is_active: bool = False
 
 
@@ -249,6 +250,7 @@ class Roles(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
     name: str = Field(index=True)
     is_senior: bool = False
+    food_required: int
 
 
 class Injuries(SQLModel, table=True):
