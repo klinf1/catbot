@@ -1,13 +1,16 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
-from db import (Buffs, BuffsStats, CharacterBuffs, Notifications, Players, Herbs,  # noqa: F401
-                HerbPile, Seasons, Clans, CharacterInventory, Roles, Injuries, CharacterDisease, CharacterInjury, CharacterDisability,  # noqa: F401
-                Disabilities, DisabilityStat, Diseases, DiseaseStat, Characters, Prey)  # noqa: F401
 
 from alembic import context
+from db import CharacterBuffs  # noqa: F401
+from db import CharacterDisability  # noqa: F401
+from db import Herbs  # noqa: F401
+from db import (Buffs, BuffsStats, CharacterDisease, CharacterInjury,
+                CharacterInventory, Characters, Clans, Disabilities,
+                DisabilityStat, Diseases, DiseaseStat, HerbPile, Injuries,
+                Notifications, Players, Prey, Roles, Seasons)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -68,9 +71,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

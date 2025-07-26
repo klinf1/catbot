@@ -376,7 +376,7 @@ class Characters(SQLModel, table=True):
     role: int | None = Field(default=None, foreign_key="roles.no")
     clan_no: int | None = Field(default=None, foreign_key="clans.no")
     hunger: int = 0
-    has_eaten: bool = True
+    nutrition: int = Field(sa_column=Column(Integer, default=0))
     is_frozen: bool = False
     is_dead: bool = False
     __table_args__ = (
@@ -610,7 +610,7 @@ class Prey(SQLModel, table=True):
 
 class DbBrowser:
     def __init__(self) -> None:
-        self.session = Session(engine)
+        self.session = Session(engine, expire_on_commit=False)
 
     def commit(self):
         self.session.commit()
@@ -631,7 +631,7 @@ class DbBrowser:
             s.delete(table)
             self.commit()
 
-    def select_one(self, query: SelectOfScalar):
+    def select_one(self, query: SelectOfScalar) -> type[SQLModel]:
         with self.session as s:
             return s.exec(query).one()
 

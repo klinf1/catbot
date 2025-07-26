@@ -78,3 +78,17 @@ class CommandBase:
                 "Ошибка при формировании параметров для замены: отсутствуют подходящие параметры."
             )
         return [name.capitalize(), params_dict]
+
+
+class CallbackBase:
+    def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        self.update = update
+        self.context = context
+        self.query = self.update.callback_query
+        self.query_data = self.query.data
+        self.chat_id: int = self.update.effective_chat.id
+        self.bot: Bot = self.context.bot
+        self.user: User = self.update.callback_query.from_user  # type: ignore
+
+    async def answer_query(self) -> None:
+        await self.query.answer()

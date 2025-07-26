@@ -80,7 +80,8 @@ class Hunt(DbBrowser):
         res = self.char.actual_stats["hunting"] + self.char.actual_stats[stat]
         if self.prey.territory == self.char.clan_no:
             res += self.char.actual_stats["faith"]
-        if self.prey.sum_required or 0 > res:
+        logger.debug(f"Результат охоты: {res} против {self.prey.sum_required or 0}")
+        if (self.prey.sum_required or 0) > res:
             logger.debug(f"Охота провалилась {self.prey.sum_required or 0} > {res}")
             return False
         logger.debug(f"Охота успешна {self.prey.sum_required or 0} <= {res}")
