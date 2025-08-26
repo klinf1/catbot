@@ -5,6 +5,7 @@ from telegram.ext import ContextTypes
 from bot.command_base import CommandBase
 from bot.herbs import HerbCommandHandler
 from bot.hunt import HuntCommandHandler
+from bot.inventory import InventoryCommandHandler
 from db import Players
 from db.players import DbPlayerConfig
 from exceptions import BannedException
@@ -17,6 +18,7 @@ class CommonCommandHandler(CommandBase):
         self.player_db = DbPlayerConfig()
         self.hunt_db = HuntCommandHandler(update, context)
         self.herb_db = HerbCommandHandler(update, context)
+        self.inventory_db = InventoryCommandHandler(update, context)
 
     async def __aenter__(self):
         main_logger.debug(
@@ -93,3 +95,6 @@ class CommonCommandHandler(CommandBase):
 
     async def gather_help(self):
         await self.herb_db.gather_help()
+    
+    async def inventory(self):
+        await self.inventory_db.send_inventory_message()

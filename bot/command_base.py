@@ -89,6 +89,11 @@ class CallbackBase:
         self.chat_id: int = self.update.effective_chat.id
         self.bot: Bot = self.context.bot
         self.user: User = self.update.callback_query.from_user  # type: ignore
-
-    async def answer_query(self) -> None:
+    
+    async def __aenter__(self):
         await self.query.answer()
+        main_logger.debug(f"Processing callback action: {self.query_data}")
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        main_logger.debug(f"Exiting {self.__class__.__name__} context manager.")
