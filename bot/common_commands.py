@@ -75,14 +75,14 @@ class CommonCommandHandler(CommandBase):
                     "add_injury_help",
                 ]
             )
-        await self.context.bot.send_message(self.chat_id, commands)
+        await self.context.bot.send_message(self.chat_id, commands, reply_to_message_id=self.update.message.id)
 
     async def start(self):
         if self.chat_id > 0:
-            await self.context.bot.send_message(self.chat_id, "Добро пожаловать!")
+            await self.context.bot.send_message(self.chat_id, "Добро пожаловать!", reply_to_message_id=self.update.message.id)
 
     async def health(self):
-        await self.context.bot.send_message(self.chat_id, "I'm here for you!")
+        await self.context.bot.send_message(self.chat_id, "I'm here for you!", reply_to_message_id=self.update.message.id)
 
     async def hunt(self):
         await self.hunt_db.hunt()
@@ -91,10 +91,13 @@ class CommonCommandHandler(CommandBase):
         await self.hunt_db.hunt_help()
 
     async def gather(self):
+        return
         await self.herb_db.gather()
 
     async def gather_help(self):
+        return
         await self.herb_db.gather_help()
     
     async def inventory(self):
+        return
         await self.inventory_db.send_inventory_message()

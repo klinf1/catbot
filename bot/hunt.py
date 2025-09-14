@@ -45,14 +45,16 @@ class HuntCommandHandler(CommandBase):
                 )  # type: ignore
                 await self.context.bot.send_message(
                     self.chat_id,
-                    "Что вы хотите сделать с добычей?",
-                    reply_markup=get_hunt_keyboard(),
+                    text=f"Охота успешна! Добыча: {prey.name}",
+                    #"Что вы хотите сделать с добычей?",
+                    #reply_markup=get_hunt_keyboard(),
+                    reply_to_message_id=self.topic_id
                 )
             elif not prey:
-                await self.bot.send_message(self.chat_id, "Вы не нашли никакой дичи.")
+                await self.bot.send_message(self.chat_id, "Вы не нашли никакой дичи.", reply_to_message_id=self.topic_id)
             else:
                 await self.context.bot.send_message(
-                    self.chat_id, f"Охота на {prey.name} провалилась!"
+                    self.chat_id, f"Охота на {prey.name} провалилась!", self.topic_id
                 )
 
     async def hunt_help(self):
@@ -60,4 +62,4 @@ class HuntCommandHandler(CommandBase):
             "Это команда для охоты! Необходимо указать имя кота и территорию, на которой он охотится через пробел. "
             "Если кот охотится на ничейной территории, то только имя кота."
         )
-        await self.context.bot.send_message(self.chat_id, text)
+        await self.context.bot.send_message(self.chat_id, text, reply_to_message_id=self.update.message.id)
