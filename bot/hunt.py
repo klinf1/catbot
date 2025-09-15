@@ -14,7 +14,7 @@ class HuntCommandHandler(CommandBase):
         super().__init__(update, context)
 
     async def hunt(self):
-        params = capitalize_for_db(self.text.strip().split(" "))
+        params = capitalize_for_db(self.text.strip().split(" ", 1))
         try:
             main_logger.debug(f"Начало охоты для {self.user.username} {params}")
             prey, success = Hunt(

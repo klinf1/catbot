@@ -28,7 +28,8 @@ class Hunt(DbBrowser):
         self.validate_char()
         res = self.check_success()
         if res is False:
-            self.apply_consequences()
+            # self.apply_consequences()
+            pass
         return self.prey, res
 
     def validate_char(self):
@@ -62,14 +63,17 @@ class Hunt(DbBrowser):
         return prey
 
     def get_char(self) -> Characters:
+        print(self.char_name)
         query = select(Characters).where(Characters.name == self.char_name)
-        with self.session as s:
-            return s.exec(query).one()
+        res = self.select_one(query)
+        print(res)
+        return res
 
     def get_clan(self) -> Clans | None:
+        logger.debug(f'Getting cat territory for {self.territory}')
         if not self.territory:
             return None
-        query = select(Clans).where(Clans.name.lower() == self.territory.lower())
+        query = select(Clans).where(Clans.name == self.territory.capitalize())
         with self.session as s:
             return s.exec(query).one()
 
