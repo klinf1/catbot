@@ -1,7 +1,18 @@
 from pydantic import computed_field
-from sqlmodel import (CheckConstraint, Column, Field, Integer, Sequence,
-                      Session, SQLModel, UniqueConstraint, and_, create_engine,
-                      func, select)
+from sqlmodel import (
+    CheckConstraint,
+    Column,
+    Field,
+    Integer,
+    Sequence,
+    Session,
+    SQLModel,
+    UniqueConstraint,
+    and_,
+    create_engine,
+    func,
+    select,
+)
 from sqlmodel.sql.expression import SelectOfScalar
 
 from logs.logs import main_logger as logger
@@ -130,6 +141,18 @@ class Clans(SQLModel, table=True):
     @staticmethod
     def attrs():
         return ["prey_pile_percent"]
+
+    def __repr__(self):
+        leader = select(Characters).where(Characters.no == self.leader)
+        with Session(engine) as s:
+            leader = s.exec(leader).all()
+        return "\n".join(
+            [
+                self.name,
+                f"Текущий процент запасов: {self.prey_pile_percent}",
+                f"Лидер: {leader[0].name if leader else 'отсутствует'}",
+            ]
+        )
 
 
 class HerbPile(SQLModel, table=True):

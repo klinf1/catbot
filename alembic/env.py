@@ -7,10 +7,26 @@ from alembic import context
 from db import CharacterBuffs  # noqa: F401
 from db import CharacterDisability  # noqa: F401
 from db import Herbs  # noqa: F401
-from db import (Buffs, BuffsStats, CharacterDisease, CharacterInjury,
-                CharacterInventory, Characters, Clans, Disabilities,
-                DisabilityStat, Diseases, DiseaseStat, HerbPile, Injuries,
-                Notifications, Players, Prey, Roles, Seasons)
+from db import (
+    Buffs,
+    BuffsStats,
+    CharacterDisease,
+    CharacterInjury,
+    CharacterInventory,
+    Characters,
+    Clans,
+    Disabilities,
+    DisabilityStat,
+    Diseases,
+    DiseaseStat,
+    HerbPile,
+    Injuries,
+    Notifications,
+    Players,
+    Prey,
+    Roles,
+    Seasons,
+)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

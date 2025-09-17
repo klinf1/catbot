@@ -7,18 +7,22 @@ from bot.herbs import HerbCommandHandler
 from bot.hunt import HuntCommandHandler
 from bot.inventory import InventoryCommandHandler
 from db import Players
+from db.characters import DbCharacterUser
 from db.players import DbPlayerConfig
-from exceptions import BannedException
+from exceptions import BannedException, WrongChatError
 from logs.logs import main_logger
 
 
 class CommonCommandHandler(CommandBase):
+    allowed_outside_group = ["health", "view_own_chars", "view_single_char"]
+
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         super().__init__(update, context)
         self.player_db = DbPlayerConfig()
         self.hunt_db = HuntCommandHandler(update, context)
         self.herb_db = HerbCommandHandler(update, context)
         self.inventory_db = InventoryCommandHandler(update, context)
+        self.character_user_db = DbCharacterUser(self.chat_id)
 
     async def __aenter__(self):
         main_logger.debug(
@@ -40,6 +44,14 @@ class CommonCommandHandler(CommandBase):
         else:
             if player.is_banned and self.command != "health":
                 raise BannedException("banned af")
+        if (
+            self.command not in self.allowed_outside_group
+            and self.chat_id not in self.group_chats
+        ):
+            await self.bot.send_message(
+                f"Эта комманда доступна только в групповом чате!"
+            )
+            raise WrongChatError
         return self
 
     async def __aexit__(self, *args):
@@ -50,8 +62,10 @@ class CommonCommandHandler(CommandBase):
             [
                 "Доступные на текущий момент команды:",
                 "health - если бот ответил, значит он работает!",
-                "hunt",
-                "hunt_help",
+                "hunt [имя персонажа] [название клана, на территории которого он будет охотиться]",
+                "hunt_help - помощь по использовании команды /hunt",
+                "view_own_chars - просмотреть состояние всех ваших персонажей",
+                "view_single_char [Имя персонажа] - просмотреть состояние персонажа с указанным именем",
             ]
         )
         if self.player_db.check_if_user_is_admin(self.user.id):
@@ -75,20 +89,45 @@ class CommonCommandHandler(CommandBase):
                     "add_injury_help",
                 ]
             )
-        await self.context.bot.send_message(self.chat_id, commands, reply_to_message_id=self.update.message.id)
+        await self.context.bot.send_message(
+            self.chat_id, commands, reply_to_message_id=self.update.message.id
+        )
 
     async def start(self):
         if self.chat_id > 0:
-            await self.context.bot.send_message(self.chat_id, "Добро пожаловать!", reply_to_message_id=self.update.message.id)
+            await self.context.bot.send_message(
+                self.chat_id,
+                "Добро пожаловать!",
+                reply_to_message_id=self.update.message.id,
+            )
 
     async def health(self):
-        await self.context.bot.send_message(self.chat_id, "I'm here for you!", reply_to_message_id=self.update.message.id)
+        await self.context.bot.send_message(
+            self.chat_id,
+            "I'm here for you!",
+            reply_to_message_id=self.update.message.id,
+        )
 
     async def hunt(self):
         await self.hunt_db.hunt()
 
     async def hunt_help(self):
         await self.hunt_db.hunt_help()
+
+    async def view_own_chars(self):
+        chars = self.character_user_db.get_all_own_chars()
+        self.view_list_from_db(chars)
+
+    async def view_single_char(self):
+        char = self.character_user_db.get_one_own_char(self.text)
+        if not char:
+            await self.bot.send_message(
+                self.chat_id,
+                f"Персонаж с таким именем не найден или не принадлежит Вам.",
+                reply_to_message_id=self.update.message.id,
+            )
+        else:
+            await self.bot.send_message(self.chat_id, str(char))
 
     async def gather(self):
         return
@@ -97,7 +136,7 @@ class CommonCommandHandler(CommandBase):
     async def gather_help(self):
         return
         await self.herb_db.gather_help()
-    
+
     async def inventory(self):
         return
         await self.inventory_db.send_inventory_message()

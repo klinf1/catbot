@@ -9,6 +9,9 @@ from logs.logs import main_logger
 
 
 class CommandBase:
+
+    group_chats = getenv("GROUPS", getenv("ADMINS", '')).split(',')
+
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         self.update = update
         self.context = context
@@ -18,6 +21,7 @@ class CommandBase:
         self.text = self.update.message.text.replace(f"/{self.command}", "").strip()  # type: ignore
         self.bot: Bot = self.context.bot
         self.topic_id: int = getenv('TOPIC', update.message.id)
+
 
     async def unknown_command(self):
         await self.context.bot.send_message(self.chat_id, "Неизвестная команда!")

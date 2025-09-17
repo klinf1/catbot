@@ -34,3 +34,13 @@ class ClanCommandHandler(CommandBase):
         )
         text += f"Список атрибутов клана, которые можно задать:\n{attrs}"
         await self.context.bot.send_message(self.chat_id, text)
+
+    async def view_all_clans(self):
+        clan_list = self.clan_db.get_all_clans()
+        await self.view_list_from_db(clan_list)
+
+    async def delete_clan(self):
+        clan_name = self.text.capitalize()
+        clan = self.clan_db.get_clan_by_name(clan_name)
+        self.clan_db.delete_clan_by_no(clan.no)
+        await self.bot.send_message(self.chat_id, f"Клан {clan.name} удален успешно.")

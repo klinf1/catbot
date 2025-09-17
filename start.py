@@ -10,8 +10,8 @@ load_dotenv()
 
 def main():
     token = os.getenv("TOKEN")
-    admin_ids = os.getenv("ADMINS", '').split(",")
-    admin_names = os.getenv("ADMIN_NAMES", '').split(",")
+    admin_ids = os.getenv("ADMINS", "").split(",")
+    admin_names = os.getenv("ADMIN_NAMES", "").split(",")
     create_tables()
     AtStart().add_admins(admin_ids, admin_names)
     bot_main(token)

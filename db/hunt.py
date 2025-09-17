@@ -2,10 +2,15 @@ from random import choice, randint
 from sqlite3 import IntegrityError
 
 from sqlmodel import Session, and_, or_, select
+from sqlalchemy.exc import NoResultFound
 
 from db import Characters, Clans, DbBrowser, Prey
 from db.injuries import DbInjuryCharacter
-from exceptions import CharacterDeadException, CharacterFrozenException
+from exceptions import (
+    CharacterDeadException,
+    CharacterFrozenException,
+    NoItemFoundDbError,
+)
 from logs.logs import main_logger as logger
 from roll import roll
 
@@ -63,19 +68,22 @@ class Hunt(DbBrowser):
         return prey
 
     def get_char(self) -> Characters:
-        print(self.char_name)
         query = select(Characters).where(Characters.name == self.char_name)
-        res = self.select_one(query)
-        print(res)
+        try:
+            res = self.select_one(query)
+        except NoResultFound as err:
+            raise NoItemFoundDbError(f"Персонаж {self.char_name} не найден.") from err
         return res
 
     def get_clan(self) -> Clans | None:
-        logger.debug(f'Getting cat territory for {self.territory}')
+        logger.debug(f"Getting cat territory for {self.territory}")
         if not self.territory:
             return None
-        query = select(Clans).where(Clans.name == self.territory.capitalize())
-        with self.session as s:
-            return s.exec(query).one()
+        try:
+            query = select(Clans).where(Clans.name == self.territory.capitalize())
+            return self.select_one(query)
+        except NoResultFound as err:
+            raise NoItemFoundDbError(f"Клан {self.territory} не найден.") from err
 
     def check_success(self) -> bool:
         if not self.prey:

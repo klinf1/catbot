@@ -14,11 +14,12 @@ def get_hunt_keyboard() -> InlineKeyboardMarkup:
     ]
     return InlineKeyboardMarkup(keyboard)
 
+
 def get_base_inv_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [
             InlineKeyboardButton("Просмотреть инвентарь", callback_data=VIEW_INVENTORY),
-            InlineKeyboardButton("Очистить инвентарь", callback_data=CLEAR_INVENTORY)
+            InlineKeyboardButton("Очистить инвентарь", callback_data=CLEAR_INVENTORY),
         ]
     ]
     return InlineKeyboardMarkup(keyboard)

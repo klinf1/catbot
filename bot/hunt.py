@@ -4,7 +4,11 @@ from telegram.ext import ContextTypes
 from bot.buttons import get_hunt_keyboard
 from bot.command_base import CommandBase
 from db.hunt import Hunt
-from exceptions import CharacterDeadException, CharacterFrozenException
+from exceptions import (
+    CharacterDeadException,
+    CharacterFrozenException,
+    NoItemFoundDbError,
+)
 from logs.logs import main_logger
 from utils import capitalize_for_db
 
@@ -28,6 +32,11 @@ class HuntCommandHandler(CommandBase):
                 self.chat_id, "Этот персонаж сейчас неактивен!"
             )
             main_logger.info(f"Охота с замороженным персонажем: {self.user.username}")
+        except NoItemFoundDbError as err:
+            await self.bot.send_message(
+                self.chat_id, err, reply_to_message_id=self.update.message.id
+            )
+            main_logger.info(f"Ошибка поиска в БД {err} {err.__traceback__}")
         except Exception as err:
             main_logger.error(err)
         else:
@@ -46,12 +55,16 @@ class HuntCommandHandler(CommandBase):
                 await self.context.bot.send_message(
                     self.chat_id,
                     text=f"Охота успешна! Добыча: {prey.name}",
-                    #"Что вы хотите сделать с добычей?",
-                    #reply_markup=get_hunt_keyboard(),
-                    reply_to_message_id=self.topic_id
+                    # "Что вы хотите сделать с добычей?",
+                    # reply_markup=get_hunt_keyboard(),
+                    reply_to_message_id=self.topic_id,
                 )
             elif not prey:
-                await self.bot.send_message(self.chat_id, "Вы не нашли никакой дичи.", reply_to_message_id=self.topic_id)
+                await self.bot.send_message(
+                    self.chat_id,
+                    "Вы не нашли никакой дичи.",
+                    reply_to_message_id=self.topic_id,
+                )
             else:
                 await self.context.bot.send_message(
                     self.chat_id, f"Охота на {prey.name} провалилась!", self.topic_id
@@ -62,4 +75,6 @@ class HuntCommandHandler(CommandBase):
             "Это команда для охоты! Необходимо указать имя кота и территорию, на которой он охотится через пробел. "
             "Если кот охотится на ничейной территории, то только имя кота."
         )
-        await self.context.bot.send_message(self.chat_id, text, reply_to_message_id=self.update.message.id)
+        await self.context.bot.send_message(
+            self.chat_id, text, reply_to_message_id=self.update.message.id
+        )

@@ -25,3 +25,11 @@ class BannedException(TelegramError):
 
 class EditError(OwnException):
     pass
+
+
+class NoItemFoundDbError(Exception):
+    pass
+
+
+class WrongChatError(Exception):
+    pass

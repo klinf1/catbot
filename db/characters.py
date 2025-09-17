@@ -22,7 +22,7 @@ class DbCharacterUser(DbBrowser):
             and_(Characters.player_chat_id == self.chat_id, Characters.name == name)
         )
         with self.session as s:
-            return s.exec(query).one()
+            return s.exec(query).first()
 
 
 class DbCharacterConfig(DbBrowser):

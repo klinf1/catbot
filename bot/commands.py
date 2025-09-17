@@ -6,6 +6,7 @@ from bot.common_commands import CommonCommandHandler
 from bot.const import EAT_PREY, LEAVE_PREY, TAKE_PREY
 from bot.conversations import HuntConversation, InvBaseConv
 from logs.logs import main_logger as logger
+from exceptions import WrongChatError
 
 
 class CommandRouter:
@@ -16,8 +17,11 @@ class CommandRouter:
 
     async def route(self):
         if self.command in CommonCommandHandler.__dict__:
-            async with CommonCommandHandler(self.update, self.context) as c:
-                await getattr(c, self.command)()
+            try:
+                async with CommonCommandHandler(self.update, self.context) as c:
+                    await getattr(c, self.command)()
+            except WrongChatError:
+                pass
         else:
             async with AdminCommandHandler(self.update, self.context) as c:
                 await c.route()
