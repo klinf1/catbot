@@ -3,6 +3,8 @@ from typing import Any
 from sqlmodel import Session, and_, select
 
 from db import Characters, DbBrowser
+from db.clans import DbClanConfig
+from exceptions import NotRealClanError
 
 
 class DbCharacterUser(DbBrowser):
@@ -34,12 +36,12 @@ class DbCharacterConfig(DbBrowser):
     def get_char_by_name(self, name: str):
         query = select(Characters).where(Characters.name == name)
         with self.session as s:
-            return s.exec(query).one()
+            return s.exec(query).first()
 
     def get_char_by_no(self, no: int):
         query = select(Characters).where(Characters.no == no)
         with self.session as s:
-            return s.exec(query).one()
+            return s.exec(query).first()
 
     def get_chars_for_player(self, chat_id: int):
         query = select(Characters).where(Characters.player_chat_id == chat_id)
@@ -48,6 +50,14 @@ class DbCharacterConfig(DbBrowser):
         return cats
 
     def add_character(self, params: dict):
+        try:
+            int(params.get("clan_no", "-100"))
+        except ValueError:
+            clan = DbClanConfig().get_real_clan(params["clan_no"])
+            if clan:
+                params["clan_no"] = clan.no
+            else:
+                raise NotRealClanError
         char = Characters(**params)
         self.add(char)
 
@@ -85,5 +95,14 @@ class DbCharacterConfig(DbBrowser):
 
     @staticmethod
     def _edit_single_stat(char: Characters, stat: str, value: Any):
+        if stat == "clan_no":
+            try:
+                int(value)
+            except ValueError:
+                clan = DbClanConfig().get_real_clan(value)
+                if clan:
+                    value = clan.no
+                else:
+                    raise NotRealClanError
         setattr(char, stat, value)
         return char

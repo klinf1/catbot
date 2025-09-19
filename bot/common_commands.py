@@ -14,7 +14,14 @@ from logs.logs import main_logger
 
 
 class CommonCommandHandler(CommandBase):
-    allowed_outside_group = ["health", "view_own_chars", "view_single_char"]
+    allowed_outside_group = [
+        "health",
+        "view_own_chars",
+        "view_single_char",
+        "commands",
+        "hunt_help",
+        "start",
+    ]
 
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         super().__init__(update, context)
@@ -47,6 +54,7 @@ class CommonCommandHandler(CommandBase):
         if (
             self.command not in self.allowed_outside_group
             and self.chat_id not in self.group_chats
+            and (not player.is_admin or not player.is_superuser)
         ):
             await self.bot.send_message(
                 f"Эта комманда доступна только в групповом чате!"

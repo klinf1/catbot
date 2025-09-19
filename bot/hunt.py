@@ -4,11 +4,8 @@ from telegram.ext import ContextTypes
 from bot.buttons import get_hunt_keyboard
 from bot.command_base import CommandBase
 from db.hunt import Hunt
-from exceptions import (
-    CharacterDeadException,
-    CharacterFrozenException,
-    NoItemFoundDbError,
-)
+from exceptions import (CharacterDeadException, CharacterFrozenException,
+                        NoItemFoundDbError)
 from logs.logs import main_logger
 from utils import capitalize_for_db
 
@@ -34,7 +31,7 @@ class HuntCommandHandler(CommandBase):
             main_logger.info(f"Охота с замороженным персонажем: {self.user.username}")
         except NoItemFoundDbError as err:
             await self.bot.send_message(
-                self.chat_id, err, reply_to_message_id=self.update.message.id
+                self.chat_id, str(err), reply_to_message_id=self.update.message.id
             )
             main_logger.info(f"Ошибка поиска в БД {err} {err.__traceback__}")
         except Exception as err:

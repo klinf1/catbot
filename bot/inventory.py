@@ -3,8 +3,8 @@ from telegram.ext import ContextTypes, ConversationHandler
 
 from bot.buttons import get_base_inv_keyboard
 from bot.command_base import CommandBase
-from db.inventory import InventoryManager
 from db.characters import DbCharacterConfig
+from db.inventory import InventoryManager
 from exceptions import CharacterDeadException, CharacterFrozenException
 from logs.logs import main_logger
 from utils import capitalize_for_db

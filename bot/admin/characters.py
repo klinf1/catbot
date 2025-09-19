@@ -5,6 +5,7 @@ from bot.command_base import CommandBase
 from db import Characters
 from db.characters import DbCharacterConfig
 from db.players import DbPlayerConfig
+from exceptions import NotRealClanError
 from utils import prepare_for_db
 
 
@@ -23,8 +24,13 @@ class CharacterCommandHandler(CommandBase):
             if col and val and col in Characters.attrs():
                 params_dict.update({col: val})
         params_dict.update({"name": name.capitalize()})
-        self.char_config.add_character(params_dict)
-        await self.context.bot.send_message(self.chat_id, "Character added!")
+        try:
+            self.char_config.add_character(params_dict)
+            await self.context.bot.send_message(self.chat_id, "Character added!")
+        except NotRealClanError:
+            await self.bot.send_message(
+                self.chat_id, f"Не найден клан {params_dict['clan_no']}"
+            )
 
     async def add_char_help(self):
         attrs = "\n".join(Characters.attrs())
@@ -33,6 +39,7 @@ class CharacterCommandHandler(CommandBase):
             "Необходимо через пробел ввести имя нового персонажа, и далее через перенос строки атрибуты в формате атрибут:значение\n"
         )
         text += f"Список атрибутов персонажа, которые можно задать:\n{attrs}"
+        text += f"Если не указать характеристику, то ее значение будет равно 0"
         await self.context.bot.send_message(self.chat_id, text)
 
     async def view_chars_by_player(self):
@@ -43,3 +50,21 @@ class CharacterCommandHandler(CommandBase):
     async def view_all_chars(self):
         chars = self.char_config.get_all_chars()
         await self.view_list_from_db(chars)
+
+    async def edit_character(self):
+        params_dict = {}
+        name, params_str = self.text.strip().split("\n")
+        params_list = params_str.strip().split("\n")
+        for item in params_list:
+            col, val = prepare_for_db(item.strip().split(":", 1))
+            if col and val and col in Characters.attrs():
+                params_dict.update({col: val})
+        params_dict.update({"name": name.capitalize()})
+        try:
+            self.char_config.edit_character(name, params_dict)
+            new_char = self.char_config.get_char_by_name(name)
+            await self.context.bot.send_message(self.chat_id, str(new_char))
+        except NotRealClanError:
+            await self.bot.send_message(
+                self.chat_id, f"Не найден клан {params_dict['clan_no']}"
+            )

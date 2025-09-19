@@ -5,8 +5,8 @@ from bot.admin.admin_commands import AdminCommandHandler
 from bot.common_commands import CommonCommandHandler
 from bot.const import EAT_PREY, LEAVE_PREY, TAKE_PREY
 from bot.conversations import HuntConversation, InvBaseConv
-from logs.logs import main_logger as logger
 from exceptions import WrongChatError
+from logs.logs import main_logger as logger
 
 
 class CommandRouter:

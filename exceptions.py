@@ -33,3 +33,7 @@ class NoItemFoundDbError(Exception):
 
 class WrongChatError(Exception):
     pass
+
+
+class NotRealClanError(Exception):
+    pass

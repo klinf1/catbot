@@ -1,11 +1,8 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from bot.buttons import (
-    get_view_inv_keyboard,
-    get_hunt_keyboard,
-    get_single_inv_keyboard,
-)
+from bot.buttons import (get_hunt_keyboard, get_single_inv_keyboard,
+                         get_view_inv_keyboard)
 from bot.command_base import CallbackBase
 from bot.const import EAT_PREY, LEAVE_PREY, TAKE_PREY
 from db.characters import DbCharacterConfig

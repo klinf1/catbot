@@ -1,6 +1,7 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-from bot.const import EAT_PREY, LEAVE_PREY, TAKE_PREY, VIEW_INVENTORY, CLEAR_INVENTORY
+from bot.const import (CLEAR_INVENTORY, EAT_PREY, LEAVE_PREY, TAKE_PREY,
+                       VIEW_INVENTORY)
 from db.inventory import InventoryManager
 
 

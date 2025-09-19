@@ -1,18 +1,7 @@
 from pydantic import computed_field
-from sqlmodel import (
-    CheckConstraint,
-    Column,
-    Field,
-    Integer,
-    Sequence,
-    Session,
-    SQLModel,
-    UniqueConstraint,
-    and_,
-    create_engine,
-    func,
-    select,
-)
+from sqlmodel import (CheckConstraint, Column, Field, Integer, Sequence,
+                      Session, SQLModel, UniqueConstraint, and_, create_engine,
+                      func, select)
 from sqlmodel.sql.expression import SelectOfScalar
 
 from logs.logs import main_logger as logger
@@ -101,8 +90,8 @@ class Players(SQLModel, table=True):
 
     def __str__(self) -> str:
         return (
-            f"Игрок: {self.chat_id}\nUsername: {self.username}\nFirst name: {self.first_name}\nLast name: {self.last_name}"
-            f"\nЗабанен: {'Да' if self.is_banned else 'Нет'}\nАдмин: {'Да' if self.is_admin else 'Нет'}"
+            f"Id: {self.no}\nИгрок: {self.chat_id}\nUsername: {self.username}\nFirst name: {self.first_name}\nLast name: {self.last_name}"
+            f"\nЗабанен: {'Да' if self.is_banned else 'Нет'}\nАдмин: {'Да' if self.is_admin else 'Нет'}\nСуперюзер: {'Да' if self.is_superuser else 'Нет'}"
         )
 
 
@@ -135,24 +124,34 @@ class Clans(SQLModel, table=True):
     __table_args__ = (UniqueConstraint("name", name="clans_name_unique"),)
     no: int | None = Field(primary_key=True, default=None, index=True)
     name: str = Field(index=True)
-    prey_pile_percent: int = 0
-    leader: int | None = Field(foreign_key="characters.no", default=None)
+    prey_pile_percent: int = 100
+    leader: int | None = Field(default=None, nullable=True)
+    is_true_clan: bool = Field(default=False, nullable=False)
 
     @staticmethod
     def attrs():
-        return ["prey_pile_percent"]
+        return ["prey_pile_percent", "is_true_clan"]
 
-    def __repr__(self):
+    def __str__(self):
         leader = select(Characters).where(Characters.no == self.leader)
-        with Session(engine) as s:
-            leader = s.exec(leader).all()
-        return "\n".join(
-            [
-                self.name,
-                f"Текущий процент запасов: {self.prey_pile_percent}",
-                f"Лидер: {leader[0].name if leader else 'отсутствует'}",
-            ]
+        prey = (
+            select(Prey).join(PreyTerritory).where(PreyTerritory.territory == self.no)
         )
+        with Session(engine) as s:
+            leader = s.exec(leader).first()
+            prey = s.exec(prey).all()
+        fields = [
+            f"Id: {self.no}",
+            f"Тип: {'Клан' if self.is_true_clan else 'Территория'}"
+            f"Название: {self.name}",
+            f"Дичь: {', '.join([prey.no for prey in prey])}",
+        ]
+        if self.is_true_clan:
+            fields += [
+                f"Текущий процент запасов: {self.prey_pile_percent}",
+                f"Лидер: {leader.name if leader else 'отсутствует'}",
+            ]
+        return "\n".join(fields)
 
 
 class HerbPile(SQLModel, table=True):
@@ -219,7 +218,7 @@ class Herbs(SQLModel, table=True):
         with Session(engine) as s:
             return s.exec(query).one()
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         if not self.territory:
             terr = "любая"
         elif self.territory == -1:
@@ -236,7 +235,7 @@ class Herbs(SQLModel, table=True):
             injury = self.actual_injury.name
         return "\n".join(
             [
-                f"Трава: {self.name}",
+                f"Id: {self.no}Название: {self.name}",
                 f"Территория происхождения: {terr}",
                 f"Минимальная редкость: {self.rarity_min}",
                 f"Максимальная редкость: {self.rarity_max}",
@@ -520,7 +519,7 @@ class Characters(SQLModel, table=True):
     @staticmethod
     def attrs():
         return [
-            "player_chat_id",
+            "player_chat_id*",
             "hunting",
             "agility",
             "hearing",
@@ -563,9 +562,15 @@ class Characters(SQLModel, table=True):
         else:
             role = self.role_whole.name
         return (
-            f"Имя: {self.name}\nАктуальные характеристики: {', '.join([f'{key}: {value}' for key, value in self.actual_stats.items()])}"
+            f"Id: {self.no}\nИмя: {self.name}\nАктуальные характеристики: {'\n'.join([f'{key}: {value}' for key, value in self.actual_stats.items()])}"
             f"\nКлан: {clan}\nРоль: {role}\nСтепень голода: {self.hunger}\nЗаморожен: {'да' if self.is_frozen else 'нет'}"
         )
+
+
+class PreyTerritory(SQLModel, table=True):
+    no: int | None = Field(primary_key=True, default=None, index=True)
+    prey: int = Field(foreign_key="prey.no")
+    territory: int = Field(foreign_key="clans.no")
 
 
 class Prey(SQLModel, table=True):
@@ -576,7 +581,6 @@ class Prey(SQLModel, table=True):
     rarity_min: int
     rarity_max: int
     sum_required: int = Field(sa_column=Column(Integer))
-    territory: int | None = None
     injury: int | None = Field(default=None, foreign_key="injuries.no")
     injury_chance: int = Field(default=0, sa_column=Column(Integer, default=0))
     __table_args__ = (
@@ -589,22 +593,15 @@ class Prey(SQLModel, table=True):
     @staticmethod
     def attrs():
         return [
-            "stat",
-            "amount",
-            "rarity_min",
-            "rarity_max",
-            "sum_required",
+            "stat*",
+            "amount*",
+            "rarity_min*",
+            "rarity_max*",
+            "sum_required*",
             "territory",
             "injury",
             "injury_chance",
         ]
-
-    @property
-    def clan(self):
-        query = select(Clans).where(Clans.no == self.territory)
-        with Session(engine) as s:
-            clan = s.exec(query).one()
-        return clan
 
     @property
     def injury_whole(self):
@@ -613,19 +610,23 @@ class Prey(SQLModel, table=True):
             inj = s.exec(query).one()
         return inj
 
+    @property
+    def territory(self):
+        query = select(Clans).join(PreyTerritory).where(PreyTerritory.prey == self.no)
+        with Session(engine) as s:
+            return s.exec(query).all()
+
     def __str__(self) -> str:
-        if self.territory == -1:
-            clan_name = "территория двуногих"
-        elif not self.territory:
+        if not self.territory:
             clan_name = "все"
         else:
-            clan_name = self.clan.name
+            clan_name = ", ".join([clan.name for clan in self.territory])
         if self.injury:
             inj = self.injury_whole.name
         else:
             inj = "нет"
         return (
-            f"Название: {self.name}\nНавык: {self.stat}\nПитательность: {self.amount}\nМинимальный бросок: {self.rarity_min}"
+            f"Id: {self.no}\nНазвание: {self.name}\nНавык: {self.stat}\nПитательность: {self.amount}\nМинимальный бросок: {self.rarity_min}"
             f"\nМаксимальный бросок: {self.rarity_max}\nНеобходимая сумма очков: {self.sum_required}\n"
             f"Территория проживания: {clan_name}\nНаносимое ранение: {inj}\nШанс ранения: {self.injury_chance or 'нет'}"
         )
@@ -661,6 +662,10 @@ class DbBrowser:
     def select_many(self, query: SelectOfScalar):
         with self.session as s:
             return s.exec(query).all()
+
+    def safe_select_one(self, query: SelectOfScalar) -> type[SQLModel] | None:
+        with self.session as s:
+            return s.exec(query).first()
 
 
 def create_tables() -> None:

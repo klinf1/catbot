@@ -1,16 +1,13 @@
 from random import choice, randint
 from sqlite3 import IntegrityError
 
-from sqlmodel import Session, and_, or_, select
 from sqlalchemy.exc import NoResultFound
+from sqlmodel import Session, and_, or_, select
 
-from db import Characters, Clans, DbBrowser, Prey
+from db import Characters, Clans, DbBrowser, Prey, PreyTerritory
 from db.injuries import DbInjuryCharacter
-from exceptions import (
-    CharacterDeadException,
-    CharacterFrozenException,
-    NoItemFoundDbError,
-)
+from exceptions import (CharacterDeadException, CharacterFrozenException,
+                        NoItemFoundDbError)
 from logs.logs import main_logger as logger
 from roll import roll
 
@@ -46,20 +43,24 @@ class Hunt(DbBrowser):
     def get_prey(self) -> Prey | None:
         res = roll()
         logger.debug(f"roll result for hunt: {res}")
-        query = select(Prey).where(
-            and_(
-                Prey.rarity_max >= res,
-                Prey.rarity_min <= res,
-                (
-                    or_(
-                        Prey.territory == None,
-                        Prey.territory == (self.clan.no if self.clan else -1),
-                    )
-                ),
+        query = (
+            select(Prey)
+            .join(PreyTerritory)
+            .where(
+                and_(
+                    Prey.rarity_max >= res,
+                    Prey.rarity_min <= res,
+                    (
+                        or_(
+                            Prey.territory == None,
+                            PreyTerritory.territory
+                            == (self.clan.no if self.clan else -1),
+                        )
+                    ),
+                )
             )
         )
-        with self.session as s:
-            poss_prey = s.exec(query).all()
+        poss_prey = self.select_many(query)
         try:
             prey = choice(poss_prey)
         except IndexError:
