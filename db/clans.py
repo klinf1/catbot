@@ -18,7 +18,7 @@ class DbClanConfig(DbBrowser):
         return self.session.exec(select(Clans).where(Clans.is_true_clan is False)).all()
 
     def get_clan_by_name(self, name: str) -> Clans:
-        query = select(Clans).where(Clans.name == name)
+        query = select(Clans).where(Clans.name == name.capitalize())
         with self.session as s:
             return s.exec(query).first()
 
@@ -74,10 +74,10 @@ class DbClanConfig(DbBrowser):
     def get_real_clan(self, id: str | int) -> Clans | None:
         if isinstance(id, str):
             query = select(Clans).where(
-                and_(Clans.name == id, Clans.is_true_clan is True)
+                and_(Clans.name == id.capitalize(), Clans.is_true_clan == True)
             )
         else:
             query = select(Clans).where(
-                and_(Clans.no == id, Clans.is_true_clan is True)
+                and_(Clans.no == id, Clans.is_true_clan == True)
             )
         return self.safe_select_one(query)

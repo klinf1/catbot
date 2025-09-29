@@ -1,3 +1,4 @@
+from sqlalchemy.exc import IntegrityError
 from telegram import Update
 from telegram.ext import ContextTypes
 
@@ -6,6 +7,7 @@ from db import Characters
 from db.characters import DbCharacterConfig
 from db.players import DbPlayerConfig
 from exceptions import NotRealClanError
+from logs.logs import main_logger
 from utils import prepare_for_db
 
 
@@ -31,6 +33,11 @@ class CharacterCommandHandler(CommandBase):
             await self.bot.send_message(
                 self.chat_id, f"Не найден клан {params_dict['clan_no']}"
             )
+        except IntegrityError as err:
+            main_logger.info(f"Попытка создания кота с одинаковым именем {name}")
+            await self.bot.send_message(
+                self.chat_id, f"Персонаж с именем {name} уже существует!"
+            )
 
     async def add_char_help(self):
         attrs = "\n".join(Characters.attrs())
@@ -53,16 +60,18 @@ class CharacterCommandHandler(CommandBase):
 
     async def edit_character(self):
         params_dict = {}
-        name, params_str = self.text.strip().split("\n")
+        name, params_str = self.text.strip().split("\n", 1)
         params_list = params_str.strip().split("\n")
         for item in params_list:
             col, val = prepare_for_db(item.strip().split(":", 1))
-            if col and val and col in Characters.attrs():
+            if col and val and col in Characters.attrs() or col.lower() == "name":
                 params_dict.update({col: val})
-        params_dict.update({"name": name.capitalize()})
+        # params_dict.update({"name": name.capitalize()})
         try:
             self.char_config.edit_character(name, params_dict)
-            new_char = self.char_config.get_char_by_name(name)
+            new_char = self.char_config.get_char_by_name(
+                params_dict.get("name") or name
+            )
             await self.context.bot.send_message(self.chat_id, str(new_char))
         except NotRealClanError:
             await self.bot.send_message(

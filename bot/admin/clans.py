@@ -18,15 +18,19 @@ class ClanCommandHandler(CommandBase):
         params_dict = {}
         if "\n" in self.text:
             name, params_str = self.text.strip().split("\n", 1)
+            params_list = params_str.strip().split("\n")
+            for item in params_list:
+                col, value = prepare_for_db(item.strip().split(":", 1))
+                if col and value and col in Clans.attrs():
+                    params_dict.update({col: value})
         else:
             name = self.text.strip()
             params_str = ""
-        params_list = params_str.strip().split("\n")
+        if not name:
+            await self.bot.send_message(self.chat_id, f"Вы не указали название клана!")
+            return
         params_dict.update({"name": name.capitalize()})
-        for item in params_list:
-            col, value = prepare_for_db(item.strip().split(":", 1))
-            if col and value and col in Clans.attrs():
-                params_dict.update({col: value})
+
         self.clan_db.add_new_clan(params_dict)
         await self.context.bot.send_message(
             self.chat_id, f"Клан {name} добавлен успешно!"
@@ -45,10 +49,12 @@ class ClanCommandHandler(CommandBase):
 
     async def view_all_clans(self):
         clan_list = self.clan_db.get_all_clans()
+        print(f" clan {clan_list}")
         await self.view_list_from_db(clan_list)
 
     async def view_all_territories(self):
         terr_list = self.clan_db.get_all_territories()
+        print(f"terr {terr_list}")
         await self.view_list_from_db(terr_list)
 
     async def delete_clan(self):

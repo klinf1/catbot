@@ -2,7 +2,7 @@ from random import choice, randint
 from sqlite3 import IntegrityError
 
 from sqlalchemy.exc import NoResultFound
-from sqlmodel import Session, and_, or_, select
+from sqlmodel import Session, and_, exists, select
 
 from db import Characters, Clans, DbBrowser, Prey, PreyTerritory
 from db.injuries import DbInjuryCharacter
@@ -43,24 +43,29 @@ class Hunt(DbBrowser):
     def get_prey(self) -> Prey | None:
         res = roll()
         logger.debug(f"roll result for hunt: {res}")
-        query = (
-            select(Prey)
-            .join(PreyTerritory)
-            .where(
-                and_(
-                    Prey.rarity_max >= res,
-                    Prey.rarity_min <= res,
-                    (
-                        or_(
-                            Prey.territory == None,
-                            PreyTerritory.territory
-                            == (self.clan.no if self.clan else -1),
-                        )
-                    ),
-                )
+        if self.clan:
+            query = (
+                select(Prey)
+                .join(PreyTerritory)
+                .where(
+                    and_(
+                        Prey.rarity_max >= res,
+                        Prey.rarity_min <= res,
+                        PreyTerritory.territory == self.clan.no,
+                    )
+                ),
             )
-        )
-        poss_prey = self.select_many(query)
+            poss_prey = self.select_many(query)
+        else:
+            poss_prey = []
+            prey_list_q = select(Prey).where(
+                exists(select(PreyTerritory).where(PreyTerritory.prey == Prey.no))
+                == False
+            )
+            prey_list = self.select_many(prey_list_q)
+            for p in prey_list:
+                if p.rarity_max >= res and p.rarity_min <= res:
+                    poss_prey.append(p)
         try:
             prey = choice(poss_prey)
         except IndexError:

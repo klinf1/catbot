@@ -21,7 +21,9 @@ class PreyCommandHandler(CommandBase):
         params_dict.update({"name": name.capitalize()})
         for item in params_list:
             col, value = prepare_for_db(item.strip().split(":", 1))
-            if col and value and col in Prey.attrs():
+            if (
+                col and value and (col in Prey.attrs() or (col + "*") in Prey.attrs())
+            ):  # TODO: убрать ебучий костыль
                 params_dict.update({col.strip(): value.strip()})
         self.prey_db.add_new_prey(params_dict)
         await self.context.bot.send_message(

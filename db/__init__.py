@@ -142,7 +142,7 @@ class Clans(SQLModel, table=True):
             prey = s.exec(prey).all()
         fields = [
             f"Id: {self.no}",
-            f"Тип: {'Клан' if self.is_true_clan else 'Территория'}"
+            f"Тип: {'Клан' if self.is_true_clan else 'Территория'}",
             f"Название: {self.name}",
             f"Дичь: {', '.join([prey.no for prey in prey])}",
         ]
