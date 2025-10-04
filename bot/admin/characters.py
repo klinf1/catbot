@@ -23,7 +23,12 @@ class CharacterCommandHandler(CommandBase):
         params_list = params_str.strip().split("\n")
         for item in params_list:
             col, val = prepare_for_db(item.strip().split(":", 1))
-            if col and val and col in Characters.attrs():
+            if (
+                col
+                and val
+                and col in Characters.attrs()
+                or col + "*" in Characters.attrs()
+            ):
                 params_dict.update({col: val})
         params_dict.update({"name": name.capitalize()})
         try:

@@ -22,6 +22,7 @@ class CommonCommandHandler(CommandBase):
         "hunt_help",
         "start",
     ]
+    char_404_msg = "Персонаж с таким именем не найден или не принадлежит Вам."
 
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         super().__init__(update, context)
@@ -29,7 +30,7 @@ class CommonCommandHandler(CommandBase):
         self.hunt_db = HuntCommandHandler(update, context)
         self.herb_db = HerbCommandHandler(update, context)
         self.inventory_db = InventoryCommandHandler(update, context)
-        self.character_user_db = DbCharacterUser(self.chat_id)
+        self.character_user_db = DbCharacterUser(update.message.from_user.id)
 
     async def __aenter__(self):
         main_logger.debug(
@@ -53,11 +54,11 @@ class CommonCommandHandler(CommandBase):
                 raise BannedException("banned af")
         if (
             self.command not in self.allowed_outside_group
-            and self.chat_id not in self.group_chats
+            and str(self.chat_id) not in self.group_chats
             and (not player.is_admin or not player.is_superuser)
         ):
             await self.bot.send_message(
-                f"Эта комманда доступна только в групповом чате!"
+                self.chat_id, f"Эта команда доступна только в групповом чате!"
             )
             raise WrongChatError
         return self
@@ -117,6 +118,14 @@ class CommonCommandHandler(CommandBase):
         )
 
     async def hunt(self):
+        name = self.text.split(" ")[0].strip()
+        if not self.character_user_db.get_one_own_char(name):
+            await self.bot.send_message(
+                self.chat_id,
+                self.char_404_msg,
+                reply_to_message_id=self.update.message.id,
+            )
+            return None
         await self.hunt_db.hunt()
 
     async def hunt_help(self):
@@ -124,14 +133,14 @@ class CommonCommandHandler(CommandBase):
 
     async def view_own_chars(self):
         chars = self.character_user_db.get_all_own_chars()
-        self.view_list_from_db(chars)
+        await self.view_list_from_db(chars)
 
     async def view_single_char(self):
         char = self.character_user_db.get_one_own_char(self.text)
         if not char:
             await self.bot.send_message(
                 self.chat_id,
-                f"Персонаж с таким именем не найден или не принадлежит Вам.",
+                self.char_404_msg,
                 reply_to_message_id=self.update.message.id,
             )
         else:
