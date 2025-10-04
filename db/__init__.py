@@ -1,18 +1,7 @@
 from pydantic import computed_field
-from sqlmodel import (
-    CheckConstraint,
-    Column,
-    Field,
-    Integer,
-    Sequence,
-    Session,
-    SQLModel,
-    UniqueConstraint,
-    and_,
-    create_engine,
-    func,
-    select,
-)
+from sqlmodel import (CheckConstraint, Column, Field, Integer, Sequence,
+                      Session, SQLModel, UniqueConstraint, and_, create_engine,
+                      func, select)
 from sqlmodel.sql.expression import SelectOfScalar
 
 from logs.logs import main_logger as logger

@@ -49,8 +49,7 @@ class Hunt(DbBrowser):
                 .join(PreyTerritory)
                 .where(
                     and_(
-                        Prey.rarity_max >= res,
-                        Prey.rarity_min <= res,
+                        Prey.rarity <= res,
                         PreyTerritory.territory == self.clan.no,
                     )
                 ),
