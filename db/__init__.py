@@ -1,7 +1,18 @@
 from pydantic import computed_field
-from sqlmodel import (CheckConstraint, Column, Field, Integer, Sequence,
-                      Session, SQLModel, UniqueConstraint, and_, create_engine,
-                      func, select)
+from sqlmodel import (
+    CheckConstraint,
+    Column,
+    Field,
+    Integer,
+    Sequence,
+    Session,
+    SQLModel,
+    UniqueConstraint,
+    and_,
+    create_engine,
+    func,
+    select,
+)
 from sqlmodel.sql.expression import SelectOfScalar
 
 from logs.logs import main_logger as logger
@@ -30,7 +41,7 @@ class BuffsStats(SQLModel, table=True):
     """
 
     no: int | None = Field(primary_key=True, default=None)
-    buff: int = Field(foreign_key="buffs.no")
+    buff: int = Field(foreign_key="buffs.no", ondelete="CASCADE")
     stat: str
     increase: int = Field(sa_column=Column(Integer))
     __table_args__ = (CheckConstraint(increase.sa_column > 0),)
@@ -61,8 +72,8 @@ class CharacterBuffs(SQLModel, table=True):
 
     __table_args__ = (UniqueConstraint("buff", "character", name="unique_buff"),)
     no: int | None = Field(primary_key=True, default=None)
-    buff: int = Field(foreign_key="buffs.no")
-    character: int = Field(foreign_key="characters.no")
+    buff: int = Field(foreign_key="buffs.no", ondelete="CASCADE")
+    character: int = Field(foreign_key="characters.no", ondelete="CASCADE")
 
 
 class Players(SQLModel, table=True):
@@ -163,8 +174,8 @@ class HerbPile(SQLModel, table=True):
     """
 
     no: int | None = Field(primary_key=True, default=None, index=True)
-    clan: int | None = Field(default=None, foreign_key="clans.no")
-    herb: int | None = Field(default=None, foreign_key="herbs.no")
+    clan: int | None = Field(default=None, foreign_key="clans.no", ondelete="CASCADE")
+    herb: int | None = Field(default=None, foreign_key="herbs.no", ondelete="CASCADE")
 
 
 class Herbs(SQLModel, table=True):
@@ -181,12 +192,18 @@ class Herbs(SQLModel, table=True):
     __table_args__ = (UniqueConstraint("name", name="herbs_name_unique"),)
     no: int | None = Field(primary_key=True, default=None, index=True)
     name: str = Field(index=True)
-    territory: int | None = Field(foreign_key="clans.no", default=None)
+    territory: int | None = Field(
+        foreign_key="clans.no", default=None, ondelete="SET NULL"
+    )
     sum_required: int = 0
     rarity_min: int
     rarity_max: int
-    disease: int | None = Field(foreign_key="diseases.no", default=None)
-    injury: int | None = Field(foreign_key="injuries.no", default=None)
+    disease: int | None = Field(
+        foreign_key="diseases.no", default=None, ondelete="SET NULL"
+    )
+    injury: int | None = Field(
+        foreign_key="injuries.no", default=None, ondelete="SET NULL"
+    )
 
     @staticmethod
     def attrs():
@@ -255,7 +272,7 @@ class CharacterInventory(SQLModel, table=True):
     """
 
     no: int | None = Field(primary_key=True, default=None, index=True)
-    char_no: int | None = Field(foreign_key="characters.no", default=None)
+    char_no: int = Field(foreign_key="characters.no", ondelete="CASCADE")
     type: str
     item: int
 
@@ -297,8 +314,8 @@ class CharacterInjury(SQLModel, table=True):
 
     __table_args__ = (UniqueConstraint("issue", "character", name="unique_injury"),)
     no: int | None = Field(primary_key=True, default=None)
-    issue: int = Field(foreign_key="injuries.no")
-    character: int = Field(foreign_key="characters.no")
+    issue: int = Field(foreign_key="injuries.no", ondelete="CASCADE")
+    character: int = Field(foreign_key="characters.no", ondelete="CASCADE")
 
 
 class InjuryStat(SQLModel, table=True):
@@ -311,7 +328,7 @@ class InjuryStat(SQLModel, table=True):
     """
 
     no: int | None = Field(primary_key=True, default=None)
-    issue: int = Field(foreign_key="injuries.no")
+    issue: int = Field(foreign_key="injuries.no", ondelete="CASCADE")
     stat: str
     penalty: int = Field(sa_column=Column(Integer))
     __table_args__ = (CheckConstraint(penalty.sa_column < 0),)
@@ -346,13 +363,13 @@ class Diseases(SQLModel, table=True):
 class CharacterDisease(SQLModel, table=True):
     __table_args__ = (UniqueConstraint("issue", "character", name="unique_disease"),)
     no: int | None = Field(primary_key=True, default=None)
-    issue: int = Field(foreign_key="diseases.no")
-    character: int = Field(foreign_key="characters.no")
+    issue: int = Field(foreign_key="diseases.no", ondelete="CASCADE")
+    character: int = Field(foreign_key="characters.no", ondelete="CASCADE")
 
 
 class DiseaseStat(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None)
-    issue: int = Field(foreign_key="diseases.no")
+    issue: int = Field(foreign_key="diseases.no", ondelete="CASCADE")
     stat: str
     penalty: int = Field(sa_column=Column(Integer))
     __table_args__ = (CheckConstraint(penalty.sa_column < 0),)
@@ -367,13 +384,13 @@ class Disabilities(SQLModel, table=True):
 class CharacterDisability(SQLModel, table=True):
     __table_args__ = (UniqueConstraint("issue", "character", name="unique_trauma"),)
     no: int | None = Field(primary_key=True, default=None)
-    issue: int = Field(foreign_key="disabilities.no")
-    character: int = Field(foreign_key="characters.no")
+    issue: int = Field(foreign_key="disabilities.no", ondelete="CASCADE")
+    character: int = Field(foreign_key="characters.no", ondelete="CASCADE")
 
 
 class DisabilityStat(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None)
-    issue: int = Field(foreign_key="disabilities.no")
+    issue: int = Field(foreign_key="disabilities.no", ondelete="CASCADE")
     stat: str
     penalty: int = Field(sa_column=Column(Integer))
     __table_args__ = (CheckConstraint(penalty.sa_column < 0),)
@@ -382,7 +399,7 @@ class DisabilityStat(SQLModel, table=True):
 class Characters(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
     name: str = Field(index=True)
-    player_chat_id: int | None = Field(foreign_key="players.chat_id", default=None)
+    player_chat_id: int = Field(foreign_key="players.chat_id", ondelete="CASCADE")
     hunting: int = Field(default=0, sa_column=Column(Integer, default=0))
     agility: int = Field(default=0, sa_column=Column(Integer, default=0))  # Agility
     hearing: int = Field(default=0, sa_column=Column(Integer, default=0))  # Hearing
@@ -395,8 +412,10 @@ class Characters(SQLModel, table=True):
     herbalism: int = Field(default=0, sa_column=Column(Integer, default=0))
     healing: int = Field(default=0, sa_column=Column(Integer, default=0))
     faith: int = Field(default=0, sa_column=Column(Integer, default=0))
-    role: int | None = Field(default=None, foreign_key="roles.no")
-    clan_no: int | None = Field(default=None, foreign_key="clans.no")
+    role: int | None = Field(default=None, foreign_key="roles.no", ondelete="SET NULL")
+    clan_no: int | None = Field(
+        default=None, foreign_key="clans.no", ondelete="SET NULL"
+    )
     hunger: int = 0
     nutrition: int = Field(sa_column=Column(Integer, default=0))
     is_frozen: bool = False
@@ -569,8 +588,8 @@ class Characters(SQLModel, table=True):
 
 class PreyTerritory(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
-    prey: int = Field(foreign_key="prey.no")
-    territory: int = Field(foreign_key="clans.no")
+    prey: int = Field(foreign_key="prey.no", ondelete="CASCADE")
+    territory: int = Field(foreign_key="clans.no", ondelete="SET NULL")
 
 
 class Prey(SQLModel, table=True):
@@ -578,16 +597,19 @@ class Prey(SQLModel, table=True):
     name: str = Field(index=True)
     stat: str
     amount: int
-    rarity_min: int
-    rarity_max: int
+    rarity: int
     sum_required: int = Field(sa_column=Column(Integer))
-    injury: int | None = Field(default=None, foreign_key="injuries.no")
+    injury: int | None = Field(
+        default=None, foreign_key="injuries.no", ondelete="SET NULL"
+    )
     injury_chance: int = Field(default=0, sa_column=Column(Integer, default=0))
     __table_args__ = (
         UniqueConstraint("name", name="prey_name_unique"),
         CheckConstraint(injury_chance.sa_column >= 0),
         CheckConstraint(injury_chance.sa_column <= 100),
         CheckConstraint(sum_required.sa_column >= 0),
+        CheckConstraint(rarity.sa_column > 0),
+        CheckConstraint(rarity.sa_column <= 100),
     )
 
     @staticmethod
