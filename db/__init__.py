@@ -578,7 +578,7 @@ class Characters(SQLModel, table=True):
 class PreyTerritory(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
     prey: int = Field(foreign_key="prey.no", ondelete="CASCADE")
-    territory: int = Field(foreign_key="clans.no", ondelete="SET NULL")
+    territory: int = Field(foreign_key="clans.no", ondelete="CASCADE")
 
 
 class Prey(SQLModel, table=True):
@@ -586,7 +586,7 @@ class Prey(SQLModel, table=True):
     name: str = Field(index=True)
     stat: str
     amount: int
-    rarity: int
+    rarity: int = Field(sa_column=Column(Integer))
     sum_required: int = Field(sa_column=Column(Integer))
     injury: int | None = Field(
         default=None, foreign_key="injuries.no", ondelete="SET NULL"
@@ -606,8 +606,7 @@ class Prey(SQLModel, table=True):
         return [
             "stat*",
             "amount*",
-            "rarity_min*",
-            "rarity_max*",
+            "rarity",
             "sum_required*",
             "territory",
             "injury",
