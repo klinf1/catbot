@@ -5,6 +5,7 @@ from telegram.ext import ContextTypes
 from bot.command_base import CommandBase
 from db import Characters
 from db.characters import DbCharacterConfig
+from db.decorators import superuser_command
 from db.players import DbPlayerConfig
 from exceptions import NotRealClanError
 from logs.logs import main_logger
@@ -92,3 +93,15 @@ class CharacterCommandHandler(CommandBase):
         name = self.text
         self.char_config.edit_freeze_char_by_name(name, False)
         await self.bot.send_message(self.chat_id, f'Персонаж {name} разморожен.', reply_to_message_id=self.update.message.id)
+    
+    @superuser_command
+    async def kill(self):
+        name = self.text
+        self.char_config.edit_death_char_by_name(name, True)
+        await self.bot.send_message(self.chat_id, f'Персонаж {name} убит.', reply_to_message_id=self.update.message.id)
+    
+    @superuser_command
+    async def resurrect(self):
+        name = self.text
+        self.char_config.edit_death_char_by_name(name, False)
+        await self.bot.send_message(self.chat_id, f'Персонаж {name} воскрешен.', reply_to_message_id=self.update.message.id)

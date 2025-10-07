@@ -85,6 +85,11 @@ class DbCharacterConfig(DbBrowser):
         char = self.get_char_by_no(no)
         char.is_dead = flag
         self.add(char)
+    
+    def edit_death_char_by_name(self, name: str, flag: bool = True):
+        char = self.get_char_by_name(name)
+        char.is_dead = flag
+        self.add(char)
 
     def check_if_char_belongs_to_clan(self, char_no: int, clan: int) -> bool:
         query = select(Characters).where(Characters.no == char_no)
