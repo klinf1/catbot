@@ -58,6 +58,6 @@ class AdminCommandHandler(CommandBase):
         else:
             await self.unknown_command()
 
-    async def admin_exception(self, err):
+    async def admin_exception(self, err: Exception):
         await self.context.bot.send_message(self.chat_id, "Ошибка. Тагните Клинфа.")
-        main_logger.error(f"Error in {self.command}: {err}")
+        main_logger.error(f"Error in {self.command}: {err}\n {err.__traceback__}")
