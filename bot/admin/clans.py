@@ -54,12 +54,10 @@ class ClanCommandHandler(CommandBase):
 
     async def view_all_clans(self):
         clan_list = self.clan_db.get_all_clans()
-        print(f" clan {clan_list}")
         await self.view_list_from_db(clan_list)
 
     async def view_all_territories(self):
         terr_list = self.clan_db.get_all_territories()
-        print(f"terr {terr_list}")
         await self.view_list_from_db(terr_list)
 
     async def delete_clan(self):
