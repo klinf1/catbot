@@ -69,7 +69,7 @@ class ClanCommandHandler(CommandBase):
         )
 
     async def appoint_leader(self):
-        leader, clan_name = self.text.split(";", 1)
+        leader, clan_name = self.text.split("\n", 1)
         char = self.char_db.get_char_by_name(leader.strip())
         if not char:
             await self.bot.send_message(
