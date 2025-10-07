@@ -64,7 +64,7 @@ class CharacterCommandHandler(CommandBase):
         chars = self.char_config.get_all_chars()
         await self.view_list_from_db(chars)
 
-    async def edit_character(self):
+    async def edit_char(self):
         params_dict = {}
         name, params_str = self.text.strip().split("\n", 1)
         params_list = params_str.strip().split("\n")
