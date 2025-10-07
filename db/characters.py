@@ -75,6 +75,11 @@ class DbCharacterConfig(DbBrowser):
         char = self.get_char_by_no(no)
         char.is_frozen = flag
         self.add(char)
+    
+    def edit_freeze_char_by_name(self, name: str, flag: bool = True):
+        char = self.get_char_by_name(name)
+        char.is_frozen = flag
+        self.add(char)
 
     def edit_death_char_by_no(self, no: int, flag: bool = True):
         char = self.get_char_by_no(no)

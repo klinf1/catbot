@@ -82,3 +82,13 @@ class CharacterCommandHandler(CommandBase):
             await self.bot.send_message(
                 self.chat_id, f"Не найден клан {params_dict['clan_no']}"
             )
+    
+    async def freeze(self):
+        name = self.text
+        self.char_config.edit_freeze_char_by_name(name)
+        await self.bot.send_message(self.chat_id, f'Персонаж {name} заморожен.', reply_to_message_id=self.update.message.id)
+    
+    async def unfreeze(self):
+        name = self.text
+        self.char_config.edit_freeze_char_by_name(name, False)
+        await self.bot.send_message(self.chat_id, f'Персонаж {name} разморожен.', reply_to_message_id=self.update.message.id)
