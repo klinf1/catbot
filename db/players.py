@@ -27,8 +27,9 @@ class DbPlayerConfig(DbBrowser):
 
     def ban_player(self, username: str):
         query = select(Players).where(Players.username == username)
-        with self.session as s:
-            player = s.exec(query).one()
+        player = self.safe_select_one(query)
+        if not player:
+            return 'Игрок с таким именем не найден!'
         if not player.is_superuser and not player.is_admin:
             player.is_banned = True
             self.add(player)
@@ -46,12 +47,9 @@ class DbPlayerConfig(DbBrowser):
         query = select(Players).where(
             and_(Players.username == username, Players.is_banned == True)
         )
-        try:
-            with self.session as s:
-                player = s.exec(query).one()
-        except Exception as e:
-            print(e)
-            return
+        player = self.safe_select_one(query)
+        if not player:
+            return 'Забаненный игрок с таким именем не найден!'
         player.is_banned = False
         self.add(player)
         query = select(Characters).where(Characters.player_chat_id == player.chat_id)
@@ -68,21 +66,18 @@ class DbPlayerConfig(DbBrowser):
             return True
         return False
 
-    def get_player_by_username(self, username: str):
+    def get_player_by_username(self, username: str) -> Players | None:
         query = select(Players).where(Players.username == username)
-        with self.session as s:
-            player = s.exec(query).one()
-        return player
+        return self.safe_select_one(query)
 
     def promote_or_demote(self, username: str, flag: bool):
-        query = select(Players).where(Players.username == username)
-        with self.session as s:
-            player = s.exec(query).one()
+        query = select(Players).where(Players.username == username, Players.is_banned == False)
+        player = self.safe_select_one(query)
+        if not player:
+            return 'Игрок с таким именем не найден!'
         player.is_admin = flag
         self.add(player)
 
     def get_all_players(self):
         query = select(Players)
-        with self.session as s:
-            players = s.exec(query).all()
-        return players
+        return self.select_many(query)
