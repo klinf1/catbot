@@ -16,7 +16,8 @@ class PlayerCommandHandler(CommandBase):
         await self.context.bot.send_message(self.chat_id, reply)
 
     async def unban(self):
-        self.player_db.unban_player(self.text)
+        reply = self.player_db.unban_player(self.text)
+        await self.bot.send_message(self.chat_id, reply)
 
     @superuser_command
     async def promote(self):

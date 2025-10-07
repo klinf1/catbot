@@ -58,6 +58,7 @@ class DbPlayerConfig(DbBrowser):
         with self.session as s:
             for cat in s.exec(query).all():
                 DbCharacterConfig().edit_freeze_char_by_no(cat.no, False)
+        return f"Игрок {username} разбанен."
 
     def check_if_user_is_admin(self, chat_id) -> bool:
         query = select(Players).where(Players.chat_id == chat_id)
