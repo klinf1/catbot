@@ -32,9 +32,14 @@ class ClanCommandHandler(CommandBase):
         params_dict.update({"name": name.capitalize()})
 
         self.clan_db.add_new_clan(params_dict)
-        await self.context.bot.send_message(
-            self.chat_id, f"Клан {name} добавлен успешно!"
-        )
+        if 'is_true_clan' in params_dict.keys() and params_dict.get('is_true_clan'):
+            await self.context.bot.send_message(
+                self.chat_id, f"Клан {name} добавлен успешно!"
+            )
+        else:
+            await self.context.bot.send_message(
+                self.chat_id, f"Территория {name} добавлена успешно!"
+            )
 
     async def add_clan_help(self):
         attrs = "\n".join(Clans.attrs())
