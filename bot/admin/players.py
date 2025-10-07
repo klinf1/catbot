@@ -21,11 +21,13 @@ class PlayerCommandHandler(CommandBase):
 
     @superuser_command
     async def promote(self):
-        self.player_db.promote_or_demote(self.text, True)
+        reply = self.player_db.promote_or_demote(self.text, True)
+        await self.bot.send_message(self.chat_id, reply)
 
     @superuser_command
     async def demote(self):
-        self.player_db.promote_or_demote(self.text, False)
+        reply = self.player_db.promote_or_demote(self.text, False)
+        await self.bot.send_message(self.chat_id, reply)
 
     async def view_all_players(self):
         players = DbPlayerConfig().get_all_players()

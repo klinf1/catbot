@@ -77,6 +77,7 @@ class DbPlayerConfig(DbBrowser):
             return 'Игрок с таким именем не найден!'
         player.is_admin = flag
         self.add(player)
+        return f'Игрок {username} {"повышен" if flag is True else "уволен"} успешно'
 
     def get_all_players(self):
         query = select(Players)
