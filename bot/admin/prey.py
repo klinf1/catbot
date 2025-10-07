@@ -47,6 +47,7 @@ class PreyCommandHandler(CommandBase):
     async def delete_prey(self):
         prey = self.prey_db.get_prey_by_name(self.text.capitalize())
         self.prey_db.delete(prey)
+        await self.context.bot.send_message(self.chat_id, f'Дичь {self.text.capitalize()} удалена успешно.')
 
     async def delete_prey_help(self):
         text = "Это команда для удаления одного вида дичи. Необходимо ввести название через пробел."
