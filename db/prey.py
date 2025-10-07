@@ -91,7 +91,7 @@ class DbPreyConfig(DbBrowser):
         old_terr = self.select_many(query)
         for i in old_terr:
             self.delete(i)
-        new_terr = terr.split(";")
+        new_terr = terr.split(";") if terr else []
         for i in new_terr:
             try:
                 int(i)
