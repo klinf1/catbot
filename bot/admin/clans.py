@@ -27,7 +27,7 @@ class ClanCommandHandler(CommandBase):
             name = self.text.strip()
             params_str = ""
         if not name:
-            await self.bot.send_message(self.chat_id, f"Вы не указали название клана!")
+            await self.bot.send_message(self.chat_id, "Вы не указали название клана!")
             return
         params_dict.update({"name": name.capitalize()})
 
@@ -48,8 +48,8 @@ class ClanCommandHandler(CommandBase):
             "Необходимо через пробел ввести имя нового клана, и далее через перенос строки атрибуты в формате атрибут:значение\n"
         )
         text += f"Список атрибутов клана, которые можно задать:\n{attrs}"
-        text += f"\nОбязательно указать имя клана. В дальнейшем можно указать лидера с помощью /appoint_leader"
-        text += f"\nЕсли не указать is_true_clan, то будет создана отдельная территория, а не клан."
+        text += "\nОбязательно указать имя клана. В дальнейшем можно указать лидера с помощью /appoint_leader"
+        text += "\nЕсли не указать is_true_clan, то будет создана отдельная территория, а не клан."
         await self.context.bot.send_message(self.chat_id, text)
 
     async def view_all_clans(self):
