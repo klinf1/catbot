@@ -82,9 +82,9 @@ class ClanCommandHandler(CommandBase):
                 self.chat_id, f"Клан под названием {clan_name} не найден."
             )
             return
-        self.clan_db.appoint_leader(clan, char.no)
+        self.clan_db.appoint_leader(clan.no, char.no)
         await self.bot.send_message(
-            self.chat_id, f"Новый лидер {char.name} для клана {clan} добавлен успешно."
+            self.chat_id, f"Новый лидер {char.name} для клана {clan.name} добавлен успешно."
         )
 
     async def appoint_leader_help(self):
@@ -92,7 +92,7 @@ class ClanCommandHandler(CommandBase):
         await self.context.bot.send_message(self.chat_id, text)
 
     async def remove_leader(self):
-        clan = self.text.capitalize()
+        clan = self.text.capitalize().strip()
         self.clan_db.remove_leader(clan)
         await self.bot.send_message(
             self.chat_id, f"Лидер для клана {clan} удален успешно."
