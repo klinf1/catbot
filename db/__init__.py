@@ -680,7 +680,9 @@ class DbBrowser:
 
 def create_tables() -> None:
     """Created baseline tables if they do not exist already."""
-
+    with engine.connect() as c:
+        cur = c.connection.cursor()
+        cur.execute('PRAGMA foreign_keys = ON;')
     SQLModel.metadata.create_all(engine)
 
 
