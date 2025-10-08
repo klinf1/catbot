@@ -1,8 +1,7 @@
 from random import choice, randint
 from sqlite3 import IntegrityError
 
-from sqlalchemy.exc import NoResultFound
-from sqlmodel import Session, and_, exists, select
+from sqlmodel import Session, and_, select
 
 from db import Characters, Clans, DbBrowser, Prey, PreyTerritory
 from db.injuries import DbInjuryCharacter
@@ -18,10 +17,10 @@ class Hunt(DbBrowser):
     clan: Clans | None
     session: Session
 
-    def __init__(self, char_name: str, territory: str | None = None) -> None:
+    def __init__(self, char_name: str, territory: str) -> None:
         super().__init__()
-        self.territory = territory
-        self.char_name = char_name
+        self.territory = territory.strip().capitalize()
+        self.char_name = char_name.strip().capitalize()
         self.char = self.get_char()
         self.clan = self.get_clan()
         self.prey = self.get_prey()
@@ -43,28 +42,17 @@ class Hunt(DbBrowser):
     def get_prey(self) -> Prey | None:
         res = roll()
         logger.debug(f"roll result for hunt: {res}")
-        if self.clan:
-            query = (
-                select(Prey)
-                .join(PreyTerritory)
-                .where(
-                    and_(
-                        Prey.rarity <= res,
-                        PreyTerritory.territory == self.clan.no,
-                    )
-                ),
+        query = (
+            select(Prey)
+            .join(PreyTerritory)
+            .where(
+                and_(
+                    Prey.rarity >= res,
+                    PreyTerritory.territory == self.clan.no,
+                )
             )
-            poss_prey = self.select_many(query)
-        else:
-            poss_prey = []
-            prey_list_q = select(Prey).where(
-                exists(select(PreyTerritory).where(PreyTerritory.prey == Prey.no))
-                == False
-            )
-            prey_list = self.select_many(prey_list_q)
-            for p in prey_list:
-                if p.rarity_max >= res and p.rarity_min <= res:
-                    poss_prey.append(p)
+        )
+        poss_prey = self.select_many(query)
         try:
             prey = choice(poss_prey)
         except IndexError:
@@ -73,22 +61,20 @@ class Hunt(DbBrowser):
         return prey
 
     def get_char(self) -> Characters:
+        logger.debug(f'getting char data for name {self.char_name}')
         query = select(Characters).where(Characters.name == self.char_name)
-        try:
-            res = self.select_one(query)
-        except NoResultFound as err:
-            raise NoItemFoundDbError(f"Персонаж {self.char_name} не найден.") from err
+        res = self.safe_select_one(query)
+        if not res:
+            raise NoItemFoundDbError(f"Персонаж {self.char_name} не найден.")
         return res
 
-    def get_clan(self) -> Clans | None:
+    def get_clan(self) -> Clans:
         logger.debug(f"Getting cat territory for {self.territory}")
-        if not self.territory:
-            return None
-        try:
-            query = select(Clans).where(Clans.name == self.territory.capitalize())
-            return self.select_one(query)
-        except NoResultFound as err:
-            raise NoItemFoundDbError(f"Клан {self.territory} не найден.") from err
+        query = select(Clans).where(Clans.name == self.territory)
+        res = self.safe_select_one(query)
+        if not res:
+            raise NoItemFoundDbError(f"Клан {self.territory} не найден.")
+        return res
 
     def check_success(self) -> bool:
         if not self.prey:
@@ -113,7 +99,7 @@ class Hunt(DbBrowser):
             logger.debug(f"{self.char.name} получает ранение {self.prey.injury}")
             try:
                 DbInjuryCharacter(self.char.no, self.prey.injury).add_injury()
-            except IntegrityError as err:
+            except IntegrityError:
                 logger.debug(
                     f"Повторное ранение {self.prey.injury} для {self.char.name}, игнорирую"
                 )

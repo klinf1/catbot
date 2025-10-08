@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from bot.buttons import get_hunt_keyboard
+# from bot.buttons import get_hunt_keyboard
 from bot.command_base import CommandBase
 from db.hunt import Hunt
 from exceptions import (CharacterDeadException, CharacterFrozenException,
@@ -16,10 +16,13 @@ class HuntCommandHandler(CommandBase):
 
     async def hunt(self):
         params = capitalize_for_db(self.text.strip().split("\n", 1))
+        if len(params) != 2:
+            await self.bot.send_message(self.chat_id, 'Вы не указали территорию для охоты')
+            return
         try:
             main_logger.debug(f"Начало охоты для {self.user.username} {params}")
             prey, success = Hunt(
-                params[0], (params[1] if len(params) > 1 else None)
+                params[0], params[1]
             ).hunt()
         except CharacterDeadException:
             await self.context.bot.send_message(self.chat_id, "Этот персонаж мертв!")
@@ -64,7 +67,10 @@ class HuntCommandHandler(CommandBase):
                 )
             else:
                 await self.context.bot.send_message(
-                    self.chat_id, f"Охота на {prey.name} провалилась!", self.topic_id
+                    self.chat_id, f"Охота на {prey.name} провалилась!!"
+                )
+                await self.context.bot.send_message(
+                    self.chat_id, f"Охота на {prey.name} провалилась!", reply_to_message_id=self.topic_id
                 )
 
     async def hunt_help(self):

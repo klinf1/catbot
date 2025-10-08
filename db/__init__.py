@@ -1,5 +1,5 @@
 from pydantic import computed_field
-from sqlmodel import (CheckConstraint, Column, Field, Integer, Sequence,
+from sqlmodel import (CheckConstraint, Column, Field, Integer,
                       Session, SQLModel, UniqueConstraint, and_, create_engine,
                       func, select)
 from sqlmodel.sql.expression import SelectOfScalar
@@ -144,7 +144,7 @@ class Clans(SQLModel, table=True):
             f"Id: {self.no}",
             f"Тип: {'Клан' if self.is_true_clan else 'Территория'}",
             f"Название: {self.name}",
-            f"Дичь: {', '.join([prey.no for prey in prey])}",
+            f"Дичь: {', '.join([prey.name for prey in prey])}",
         ]
         if self.is_true_clan:
             fields += [
@@ -586,8 +586,8 @@ class Prey(SQLModel, table=True):
     name: str = Field(index=True)
     stat: str
     amount: int
-    rarity: int = Field(sa_column=Column(Integer))
-    sum_required: int = Field(sa_column=Column(Integer))
+    rarity: int = Field(sa_column=Column(Integer, nullable=False))
+    sum_required: int = Field(sa_column=Column(Integer, nullable=False))
     injury: int | None = Field(
         default=None, foreign_key="injuries.no", ondelete="SET NULL"
     )
@@ -636,8 +636,8 @@ class Prey(SQLModel, table=True):
         else:
             inj = "нет"
         return (
-            f"Id: {self.no}\nНазвание: {self.name}\nНавык: {self.stat}\nПитательность: {self.amount}\nМинимальный бросок: {self.rarity_min}"
-            f"\nМаксимальный бросок: {self.rarity_max}\nНеобходимая сумма очков: {self.sum_required}\n"
+            f"Id: {self.no}\nНазвание: {self.name}\nНавык: {self.stat}\nПитательность: {self.amount}\nРедкость: {self.rarity}"
+            f"\n\nНеобходимая сумма очков: {self.sum_required}\n"
             f"Территория проживания: {clan_name}\nНаносимое ранение: {inj}\nШанс ранения: {self.injury_chance or 'нет'}"
         )
 

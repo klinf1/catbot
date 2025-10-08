@@ -10,7 +10,7 @@ from db import Players
 from db.characters import DbCharacterUser
 from db.players import DbPlayerConfig
 from exceptions import BannedException, WrongChatError
-from logs.logs import main_logger
+from logs.logs import main_logger, user_logger
 
 
 class CommonCommandHandler(CommandBase):
@@ -118,13 +118,14 @@ class CommonCommandHandler(CommandBase):
         )
 
     async def hunt(self):
-        name = self.text.split(" ")[0].strip()
+        name = self.text.split("\n")[0].strip().capitalize()
         if not self.character_user_db.get_one_own_char(name):
             await self.bot.send_message(
                 self.chat_id,
                 self.char_404_msg,
                 reply_to_message_id=self.update.message.id,
             )
+            user_logger.info(f'Охота чужим персонажем {self.update.message.from_user.id}')
             return None
         await self.hunt_db.hunt()
 
