@@ -12,10 +12,12 @@ class DbClanConfig(DbBrowser):
         super().__init__()
 
     def get_all_clans(self):
-        return self.session.exec(select(Clans).where(Clans.is_true_clan is True)).all()
+        query = select(Clans).where(Clans.is_true_clan == True)  # type: ignore
+        return self.select_many(query)
 
     def get_all_territories(self):
-        return self.session.exec(select(Clans).where(Clans.is_true_clan is False)).all()
+        query = select(Clans).where(Clans.is_true_clan == False)  # type: ignore
+        return self.select_many(query)
 
     def get_clan_by_name(self, name: str) -> Clans:
         query = select(Clans).where(Clans.name == name.capitalize())
