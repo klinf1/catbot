@@ -32,7 +32,7 @@ class AdminCommandHandler(CommandBase):
 
     async def __aenter__(self):
         main_logger.debug(
-            f"Admin command manager starting with command: {self.command}"
+            f"Admin command manager starting with command: {self.command}\nparams: {self.text}"
         )
         if not self.player_db.check_if_user_is_admin(self.user.id):
             self.context.chat_data.update(  # type: ignore
