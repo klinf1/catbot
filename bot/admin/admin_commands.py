@@ -1,3 +1,5 @@
+import traceback
+
 from telegram import Update
 from telegram.error import TelegramError
 from telegram.ext import ContextTypes
@@ -53,11 +55,8 @@ class AdminCommandHandler(CommandBase):
                 except TelegramError as err:
                     raise TelegramError(str(err)) from err
                 except Exception as err:
-                    await self.admin_exception(err)
+                    await self.context.bot.send_message(self.chat_id, "Ошибка. Тагните Клинфа.")
+                    main_logger.error(f"Error in {self.command}: {err}\n{traceback.format_exc()}")
                 break
         else:
             await self.unknown_command()
-
-    async def admin_exception(self, err: Exception):
-        await self.context.bot.send_message(self.chat_id, "Ошибка. Тагните Клинфа.")
-        main_logger.error(f"Error in {self.command}: {err}\n {err.__traceback__}")

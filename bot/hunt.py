@@ -1,3 +1,5 @@
+import traceback
+
 from telegram import Update
 from telegram.ext import ContextTypes
 
@@ -36,7 +38,7 @@ class HuntCommandHandler(CommandBase):
             await self.bot.send_message(
                 self.chat_id, str(err), reply_to_message_id=self.update.message.id
             )
-            main_logger.info(f"Ошибка поиска в БД {err} {err.__traceback__}")
+            main_logger.info(f"Ошибка поиска в БД {err} {traceback.format_exc()}")
         except Exception as err:
             main_logger.error(err)
         else:
