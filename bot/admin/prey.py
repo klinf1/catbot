@@ -37,7 +37,7 @@ class PreyCommandHandler(CommandBase):
             "Необходимо через пробел ввести его название, и далее через перенос строки атрибуты в формате атрибут:значение\n"
         )
         text += f"Список атрибутов дичи, которые можно задать:\n{attrs}"
-        text += f"\nЕсли не указать территорию дичи, то она будет встречаться везде."
+        text += "\nЕсли не указать территорию дичи, то она будет встречаться везде."
         await self.context.bot.send_message(self.chat_id, text)
 
     async def view_all_prey(self):
@@ -59,17 +59,17 @@ class PreyCommandHandler(CommandBase):
         params_list = params_str.strip().split("\n")
         for item in params_list:
             col, value = prepare_for_db(item.strip().split(":", 1))
-            if col and value and col in Prey.attrs():
+            if col and value and (col in Prey.attrs() or (col + "*") in Prey.attrs()):
                 if col == "territory":
                     self.bot.send_message(
                         self.chat_id,
-                        f"Для редактирования территорий проживания дичи воспользуйтесь соответствующими коммандами.",
+                        "Для редактирования территорий проживания дичи воспользуйтесь соответствующими коммандами.",
                     )
                     continue
                 params_dict.update({col.strip(): value.strip()})
         self.prey_db.edit_prey_by_name(name.capitalize(), params_dict)
         upd_prey = self.prey_db.get_prey_by_name(name)
-        self.bot.send_message(self.chat_id, str(upd_prey))
+        await self.bot.send_message(self.chat_id, str(upd_prey))
 
     async def new_prey_territory(self):
         name, terr = self.text.strip().split("\n")
