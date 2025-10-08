@@ -54,11 +54,17 @@ class ClanCommandHandler(CommandBase):
 
     async def view_all_clans(self):
         clan_list = self.clan_db.get_all_clans()
-        await self.view_list_from_db(clan_list)
+        if clan_list:
+            await self.view_list_from_db(clan_list)
+        else:
+            await self.bot.send_message(self.chat_id, 'Кланов еще нет :(')
 
     async def view_all_territories(self):
         terr_list = self.clan_db.get_all_territories()
-        await self.view_list_from_db(terr_list)
+        if terr_list:
+            await self.view_list_from_db(terr_list)
+        else:
+            await self.bot.send_message(self.chat_id, 'Территорий еще нет :(')
 
     async def delete_clan(self):
         clan_name = self.text.capitalize()
