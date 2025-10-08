@@ -45,7 +45,7 @@ class DbPreyConfig(DbBrowser):
                     int(i.strip())
                     territories.append(i)
                 except ValueError:
-                    j = DbClanConfig().get_clan_by_name(i.strip())
+                    j = DbClanConfig().get_clan_by_name(i.strip().capitalize())
                     territories.append(j.no)
             del params["territory"]
         new_prey = Prey(**params)
@@ -53,9 +53,7 @@ class DbPreyConfig(DbBrowser):
         added_prey: Prey = self.select_one(
             select(Prey).where(Prey.name == new_prey.name)
         )
-        print(territories)
         for i in territories:
-            print(i)
             new_terr_link = PreyTerritory(prey=added_prey.no, territory=i)
             self.add(new_terr_link)
 
