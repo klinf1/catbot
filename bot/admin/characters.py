@@ -39,7 +39,7 @@ class CharacterCommandHandler(CommandBase):
             await self.bot.send_message(
                 self.chat_id, f"Не найден клан {params_dict['clan_no']}"
             )
-        except IntegrityError as err:
+        except IntegrityError:
             main_logger.info(f"Попытка создания кота с одинаковым именем {name}")
             await self.bot.send_message(
                 self.chat_id, f"Персонаж с именем {name} уже существует!"
@@ -52,17 +52,23 @@ class CharacterCommandHandler(CommandBase):
             "Необходимо через пробел ввести имя нового персонажа, и далее через перенос строки атрибуты в формате атрибут:значение\n"
         )
         text += f"Список атрибутов персонажа, которые можно задать:\n{attrs}"
-        text += f"Если не указать характеристику, то ее значение будет равно 0"
+        text += "Если не указать характеристику, то ее значение будет равно 0"
         await self.context.bot.send_message(self.chat_id, text)
 
     async def view_chars_by_player(self):
         chat_id = self.player_db.get_player_by_username(self.text).chat_id
         chars = self.char_config.get_chars_for_player(chat_id)
-        await self.view_list_from_db(chars)
+        if chars:
+            await self.view_list_from_db(chars)
+        else:
+            await self.bot.send_message(self.chat_id, 'У этого игрока нет персонажей!')
 
     async def view_all_chars(self):
         chars = self.char_config.get_all_chars()
-        await self.view_list_from_db(chars)
+        if chars:
+            await self.view_list_from_db(chars)
+        else:
+            await self.bot.send_message(self.chat_id, 'В игре нет персонажей!')
 
     async def edit_char(self):
         params_dict = {}
@@ -85,12 +91,12 @@ class CharacterCommandHandler(CommandBase):
             )
     
     async def freeze(self):
-        name = self.text
+        name = self.text.strip().capitalize()
         self.char_config.edit_freeze_char_by_name(name)
         await self.bot.send_message(self.chat_id, f'Персонаж {name} заморожен.', reply_to_message_id=self.update.message.id)
     
     async def unfreeze(self):
-        name = self.text
+        name = self.text.strip().capitalize()
         self.char_config.edit_freeze_char_by_name(name, False)
         await self.bot.send_message(self.chat_id, f'Персонаж {name} разморожен.', reply_to_message_id=self.update.message.id)
     
