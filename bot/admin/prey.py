@@ -95,7 +95,6 @@ class PreyCommandHandler(CommandBase):
         name, terr = self.text.strip().split("\n")
         prey = self.prey_db.get_prey_by_name(name)
         self.prey_db.reset_territories(prey, terr)
-        self.prey_db.refresh()
         prey = self.prey_db.get_prey_by_name(name)
         await self.context.bot.send_message(
             self.chat_id, f"Обновленная дичь: {str(prey)}"
