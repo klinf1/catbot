@@ -32,6 +32,12 @@ class CharacterCommandHandler(CommandBase):
             ):
                 params_dict.update({col: val})
         params_dict.update({"name": name.capitalize()})
+        if self.char_config.get_char_by_name(name.capitalize()):
+            await self.bot.send_message(
+                self.chat_id, f"Персонаж с именем {name} уже существует!"
+            )
+            main_logger.info(f"Попытка создания кота с одинаковым именем {name}")
+            return
         try:
             self.char_config.add_character(params_dict)
             await self.context.bot.send_message(self.chat_id, "Character added!")
@@ -39,10 +45,10 @@ class CharacterCommandHandler(CommandBase):
             await self.bot.send_message(
                 self.chat_id, f"Не найден клан {params_dict['clan_no']}"
             )
-        except IntegrityError:
-            main_logger.info(f"Попытка создания кота с одинаковым именем {name}")
+        except IntegrityError as err:
+            main_logger.info(f"Ошибка создания персонажа: {err}")
             await self.bot.send_message(
-                self.chat_id, f"Персонаж с именем {name} уже существует!"
+                self.chat_id, "Ошибка создания персонажа! Проверьте параметры!"
             )
 
     async def add_char_help(self):
