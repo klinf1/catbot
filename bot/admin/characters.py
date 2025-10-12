@@ -88,7 +88,7 @@ class CharacterCommandHandler(CommandBase):
         try:
             self.char_config.edit_character(name, params_dict)
             new_char = self.char_config.get_char_by_name(
-                params_dict.get("name") or name
+                params_dict.get("name") or name.capitalize()
             )
             await self.context.bot.send_message(self.chat_id, str(new_char))
         except NotRealClanError:
