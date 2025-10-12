@@ -42,11 +42,6 @@ class DbClanConfig(DbBrowser):
         clan.name = new_name
         self.add(clan)
 
-    def edit_prey_pile(self, clan_no: int, value: int):
-        clan = self.get_clan_by_no(clan_no)
-        clan.prey_pile_percent += value
-        self.add(clan)
-
     @overload
     def appoint_leader(self, clan_id: int, new_leader: int): ...
 

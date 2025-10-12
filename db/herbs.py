@@ -85,6 +85,9 @@ class HerbConfig(DbBrowser):
 
     def get_all_herbs(self):
         return self.select_many(select(Herbs))
+    
+    def get_herb_by_no(self, no: int) -> Herbs | None:
+        return self.safe_select_one(select(Herbs).where(Herbs.no == no))
 
     def edit_herb(self, name: str, params: dict[str, str | int | None]):
         herb = self.get_herb_by_name(name.capitalize())

@@ -117,20 +117,27 @@ class Clans(SQLModel, table=True):
     Table with clans info.
 
     :var str name:
-    :var int prey_pile_percent: amount of prey in clan's pile
     :var int|None leader: current leader, foreign key to characters.no
     """
 
     __table_args__ = (UniqueConstraint("name", name="clans_name_unique"),)
     no: int | None = Field(primary_key=True, default=None, index=True)
     name: str = Field(index=True)
-    prey_pile_percent: int = 100
     leader: int | None = Field(default=None, nullable=True)
     is_true_clan: bool = Field(default=False, nullable=False)
 
     @staticmethod
     def attrs():
-        return ["prey_pile_percent", "is_true_clan"]
+        return [ "is_true_clan"]
+    
+    def prey_pile(self):
+        res = 0
+        query = select(Prey).join(PreyPile, onclause= PreyPile.prey == Prey.no).where(PreyPile.clan == self.no)
+        with Session(engine) as s:
+            all_prey = s.exec(query).all()
+        for item in all_prey:
+            res += item.amount
+        return res
 
     def __str__(self):
         leader = select(Characters).where(Characters.no == self.leader)
@@ -148,7 +155,7 @@ class Clans(SQLModel, table=True):
         ]
         if self.is_true_clan:
             fields += [
-                f"Текущий процент запасов: {self.prey_pile_percent}",
+                f"Текущee количество запасов: {self.prey_pile()}",
                 f"Лидер: {leader.name if leader else 'отсутствует'}",
             ]
         return "\n".join(fields)
@@ -640,6 +647,12 @@ class Prey(SQLModel, table=True):
             f"\n\nНеобходимая сумма очков: {self.sum_required}\n"
             f"Территория проживания: {clan_name}\nНаносимое ранение: {inj}\nШанс ранения: {self.injury_chance or 'нет'}"
         )
+
+
+class PreyPile(SQLModel, table=True):
+    no: int | None = Field(primary_key=True, default=None, index=True)
+    clan: int = Field(foreign_key="clans.no", ondelete="CASCADE")
+    prey: int = Field(foreign_key="prey.no", ondelete='CASCADE')
 
 
 class DbBrowser:

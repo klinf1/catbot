@@ -3,7 +3,7 @@ import traceback
 from telegram import Update
 from telegram.ext import ContextTypes
 
-# from bot.buttons import get_hunt_keyboard
+from bot.buttons import get_hunt_keyboard
 from bot.command_base import CommandBase
 from db.hunt import Hunt
 from exceptions import (CharacterDeadException, CharacterFrozenException,
@@ -56,9 +56,9 @@ class HuntCommandHandler(CommandBase):
                 )  # type: ignore
                 await self.context.bot.send_message(
                     self.chat_id,
-                    text=f"Охота успешна! Добыча: {prey.name}",
-                    # "Что вы хотите сделать с добычей?",
-                    # reply_markup=get_hunt_keyboard(),
+                    text=f"Охота успешна! Добыча: {prey.name}\n"
+                    "Что вы хотите сделать с добычей?",
+                    reply_markup=get_hunt_keyboard(),
                     reply_to_message_id=self.topic_id,
                 )
             elif not prey:

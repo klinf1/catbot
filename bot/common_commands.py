@@ -156,5 +156,4 @@ class CommonCommandHandler(CommandBase):
         await self.herb_db.gather_help()
 
     async def inventory(self):
-        return
         await self.inventory_db.send_inventory_message()

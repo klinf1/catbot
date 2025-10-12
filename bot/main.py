@@ -31,6 +31,6 @@ def bot_main(token: str):
     app = Application.builder().token(token).build()
     app.add_handler(MessageHandler(filters.COMMAND, command_handler))
     app.add_handler(MessageHandler(filters.TEXT, conversation_handler))
-    #  app.add_handler(CallbackQueryHandler(callback_handler))
+    app.add_handler(CallbackQueryHandler(callback_handler))
     app.add_error_handler(error_handler)
     app.run_polling()
