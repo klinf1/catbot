@@ -119,4 +119,5 @@ class PreyViewConv(CallbackBase):
                 await self.bot.send_message(self.chat_id, "Вы оставили добычу.")
             case "eat_prey":
                 res = self.nom.eat(char, prey)
+                self.inv.remove_item(char.no, prey.no)
                 await self.context.bot.send_message(self.chat_id, res)
