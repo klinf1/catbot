@@ -50,6 +50,9 @@ class InvBaseConv(CallbackBase):
         )
         match self.query_data:
             case "view_inv":
+                if not self.inventory_db.get_char_inventory(char.no):
+                    await self.bot.send_message(self.chat_id, f"Инвентарь персонажа {char.name} пуст")
+                    return
                 self.context.user_data.update(
                     {
                         "state": {
@@ -60,7 +63,7 @@ class InvBaseConv(CallbackBase):
                 )
                 await self.bot.send_message(
                     self.chat_id,
-                    f"Инвентарь кота {char.name}",
+                    f"Инвентарь персонажа {char.name}",
                     reply_markup=get_view_inv_keyboard(char.no),
                 )
             case "clear_inv":
@@ -98,6 +101,8 @@ class PreyViewConv(CallbackBase):
         self.prey_db = DbPreyConfig()
         self.nom = Eater()
         self.pile = PreyPileConfig()
+        self.inv = InventoryManager()
+        self.char_db = DbCharacterConfig()
     
     async def action(self):
         prey = self.context.user_data["state"]["args"]["prey"]
@@ -107,8 +112,10 @@ class PreyViewConv(CallbackBase):
         match self.query_data:
             case "carry_prey":
                 res = self.pile.add_to_pile(char.clan_no, prey)
+                self.inv.remove_item(char.no, prey.no)
                 await self.context.bot.send_message(self.chat_id, res)
             case "leave_prey":
+                self.inv.remove_item(char.no, prey.no)
                 await self.bot.send_message(self.chat_id, "Вы оставили добычу.")
             case "eat_prey":
                 res = self.nom.eat(char, prey)

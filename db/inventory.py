@@ -28,7 +28,7 @@ class InventoryManager(DbBrowser):
                 CharacterInventory.item == item_id,
             )
         )
-        item = self.select_one(query)
+        item = self.safe_select_one(query)
         if item:
             self.delete(item)
             return True

@@ -17,10 +17,19 @@ class InventoryCommandHandler(CommandBase):
         self.character_db = DbCharacterConfig()
 
     async def send_inventory_message(self):
-        if self.character_db.get_char_by_name(self.text).player_chat_id != self.user.id:
+        char = self.character_db.get_char_by_name(self.text.capitalize())
+        if char.player_chat_id != self.user.id:
             await self.bot.send_message(
                 self.chat_id, "Этот персонаж не принадлежит вам!"
             )
+        elif char.is_frozen:
+            await self.bot.send_message(
+                self.chat_id, "Этот персонаж заморожен!"
+            )
+        elif char.is_dead:
+            await self.bot.send_message(
+                self.chat_id, "Этот персонаж мертв!"
+            )    
         else:
             self.context.user_data.update(
                 {

@@ -30,7 +30,7 @@ class PreyPileConfig(DbBrowser):
     def add_to_pile(self, clan: int | str| Clans, prey: int | str | Prey):
         clan = self._get_clan(clan)
         prey = self._get_prey(prey)
-        new_pile = PreyPile(clan.no, prey.no)
+        new_pile = PreyPile(clan=clan.no, prey=prey.no)
         self.add(new_pile)
         return f"Дичь {prey.name} добавлена в кучу клана {clan.name}"
     
