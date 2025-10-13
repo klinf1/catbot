@@ -665,6 +665,7 @@ class PreyPile(SQLModel, table=True):
 class Ages(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
     name: str
+    food_req: int
 
 
 class DbBrowser:
