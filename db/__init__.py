@@ -672,10 +672,11 @@ class Ages(SQLModel, table=True):
 
 
 class Settings(SQLModel, table=True):
+    area: str
     name: str
     value: str
     __table_args__ = (
-        UniqueConstraint("name", name="setting_name_unique"),
+        UniqueConstraint("name", "area", name="setting_name_unique"),
     )
 
 

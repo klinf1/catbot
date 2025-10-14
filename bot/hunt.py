@@ -7,7 +7,7 @@ from bot.buttons import get_hunt_keyboard
 from bot.command_base import CommandBase
 from db.hunt import Hunt
 from exceptions import (CharacterDeadException, CharacterFrozenException,
-                        NoItemFoundDbError)
+                        NoItemFoundDbError, TooMuchHuntingError)
 from logs.logs import main_logger
 from utils import capitalize_for_db
 
@@ -19,7 +19,7 @@ class HuntCommandHandler(CommandBase):
     async def hunt(self):
         params = capitalize_for_db(self.text.strip().split("\n", 1))
         if len(params) != 2:
-            await self.bot.send_message(self.chat_id, 'Вы не указали территорию для охоты')
+            await self.bot.send_message(self.chat_id, 'Вы не указали территорию для охоты или имя кота!')
             return
         try:
             main_logger.debug(f"Начало охоты для {self.user.username} {params}")
@@ -39,6 +39,8 @@ class HuntCommandHandler(CommandBase):
                 self.chat_id, str(err), reply_to_message_id=self.update.message.id
             )
             main_logger.info(f"Ошибка поиска в БД {err} {traceback.format_exc()}")
+        except TooMuchHuntingError:
+            await self.bot.send_message(self.chat_id, "Этот персонаж уже достаочно поохотился в этом сезоне!")
         except Exception as err:
             main_logger.error(err)
         else:

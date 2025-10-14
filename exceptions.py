@@ -37,3 +37,7 @@ class WrongChatError(Exception):
 
 class NotRealClanError(Exception):
     pass
+
+
+class TooMuchHuntingError(Exception):
+    pass

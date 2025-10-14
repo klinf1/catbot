@@ -1,4 +1,4 @@
-SETTINGS = [{'name': 'hunt_attempts', 'value': '5'}]
+SETTINGS = [{'table': 'hunt', 'name': 'hunt_attempts', 'value': '5'}]
 
 SEASONS = []
 
