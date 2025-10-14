@@ -6,6 +6,7 @@ from sqlmodel import (CheckConstraint, Column, Field, Integer,
                       func, select)
 from sqlmodel.sql.expression import SelectOfScalar
 
+from db.table_data import AGES, CLANS, SEASONS, SETTINGS
 from logs.logs import main_logger as logger
 
 engine = create_engine("sqlite:///cats.db")
@@ -102,15 +103,15 @@ class Seasons(SQLModel, table=True):
     Table with season info.
 
     :var str name:
-    :var int hunt_attemps:
+    :var int hunt_mod:
     :var bool=False is_active:
     """
 
     __table_args__ = (UniqueConstraint("name", name="seasons_name_unique"),)
     no: int | None = Field(primary_key=True, default=None, index=True)
     name: str = Field(index=True)
-    hunt_attempts: int
-    herb_attempts: int
+    hunt_mod: int
+    herb_mod: int
     is_active: bool = False
 
 
@@ -419,6 +420,8 @@ class Characters(SQLModel, table=True):
     age: int = Field(foreign_key='ages.no', ondelete='RESTRICT')
     is_frozen: bool = False
     is_dead: bool = False
+    curr_hunts: int = 0
+    curr_herbs: int = 0
     __table_args__ = (
         UniqueConstraint("name", name="characters_name_unique"),
         CheckConstraint(stamina.sa_column >= 0),
@@ -668,6 +671,14 @@ class Ages(SQLModel, table=True):
     food_req: int
 
 
+class Settings(SQLModel, table=True):
+    name: str
+    value: str
+    __table_args__ = (
+        UniqueConstraint("name", name="setting_name_unique"),
+    )
+
+
 class DbBrowser:
     def __init__(self) -> None:
         self.session = Session(engine, expire_on_commit=False)
@@ -702,20 +713,22 @@ class DbBrowser:
     def safe_select_one(self, query: SelectOfScalar) -> type[SQLModel] | None:
         with self.session as s:
             return s.exec(query).first()
-
-
-def create_tables() -> None:
-    """Created baseline tables if they do not exist already."""
-    with engine.connect() as c:
-        cur = c.connection.cursor()
-        cur.execute('PRAGMA foreign_keys = ON;')
-    SQLModel.metadata.create_all(engine)
-
-
-class AtStart(DbBrowser):
-    def __init__(self) -> None:
-        super().__init__()
-
+    
+    def fill_default(self) -> None:
+        if not self.select_many(select(Ages)):
+            for i in AGES:
+                self.add(Ages(**i))
+        if not self.select_many(select(Seasons)):
+            for i in SEASONS:
+                self.add(Seasons(**i))
+        if not self.select_many(select(Clans)):
+            for i in CLANS:
+                self.add(Clans(**i))
+        if not self.select_many(select(Settings)):
+            for i in SETTINGS:
+                self.add(Settings(**i))
+        return None
+    
     def add_admins(self, ids: list[str], usernames: list[str]):
         for id, username in zip(ids, usernames):
             username = username.replace("'", "")
@@ -729,3 +742,12 @@ class AtStart(DbBrowser):
                         is_superuser=True,
                     )
                     self.add(admin)
+
+
+def create_tables() -> None:
+    """Created baseline tables if they do not exist already."""
+    with engine.connect() as c:
+        cur = c.connection.cursor()
+        cur.execute('PRAGMA foreign_keys = ON;')
+    SQLModel.metadata.create_all(engine)
+    DbBrowser().fill_default()

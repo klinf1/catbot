@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 
 from bot.main import bot_main
-from db import AtStart, create_tables
+from db import DbBrowser, create_tables
 
 load_dotenv()
 
@@ -13,7 +13,7 @@ def main():
     admin_ids = os.getenv("ADMINS", "").split(",")
     admin_names = os.getenv("ADMIN_NAMES", "").split(",")
     create_tables()
-    AtStart().add_admins(admin_ids, admin_names)
+    DbBrowser().add_admins(admin_ids, admin_names)
     bot_main(token)
 
 
