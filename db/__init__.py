@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from pydantic import computed_field
 from sqlmodel import (CheckConstraint, Column, Field, Integer,
                       Session, SQLModel, UniqueConstraint, and_, create_engine,
@@ -113,6 +115,7 @@ class Seasons(SQLModel, table=True):
     hunt_mod: int
     herb_mod: int
     is_active: bool = False
+    next: str
 
 
 class Clans(SQLModel, table=True):
@@ -417,7 +420,7 @@ class Characters(SQLModel, table=True):
     )
     hunger: int = 0
     nutrition: int = Field(sa_column=Column(Integer, default=0))
-    age: int = Field(foreign_key='ages.no', ondelete='RESTRICT')
+    age: int
     is_frozen: bool = False
     is_dead: bool = False
     curr_hunts: int = 0
@@ -583,11 +586,8 @@ class Characters(SQLModel, table=True):
             role = "нет"
         else:
             role = self.role_whole.name
-        query = select(Ages).where(Ages.no == self.age)
-        with self.session as s:
-            age = s.exec(query).first()
         return (
-            f"Id: {self.no}\nИмя: {self.name}\nВозраст: {age.name}\nАктуальные характеристики:\n{'\n'.join([f'{key}: {value}' for key, value in self.actual_stats.items()])}"
+            f"Id: {self.no}\nИмя: {self.name}\nВозраст: {self.age} лун\nАктуальные характеристики:\n{'\n'.join([f'{key}: {value}' for key, value in self.actual_stats.items()])}"
             f"\nКлан: {clan}\nРоль: {role}\nСтепень голода: {self.hunger}\nЗаморожен: {'да' if self.is_frozen else 'нет'}"
         )
 
@@ -663,20 +663,23 @@ class PreyPile(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
     clan: int = Field(foreign_key="clans.no", ondelete="CASCADE")
     prey: int = Field(foreign_key="prey.no", ondelete='CASCADE')
+    date_added: datetime = Field(default=datetime.now())
 
 
 class Ages(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
     name: str
+    max_age: int
     food_req: int
+    next: str | None
 
 
 class Settings(SQLModel, table=True):
-    area: str
+    no: int | None = Field(primary_key=True, default=None, index=True)
     name: str
     value: str
     __table_args__ = (
-        UniqueConstraint("name", "area", name="setting_name_unique"),
+        UniqueConstraint("name", name="setting_name_unique"),
     )
 
 
