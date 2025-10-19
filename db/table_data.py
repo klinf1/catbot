@@ -1,4 +1,10 @@
-SETTINGS = [{'name': 'hunt_attempts', 'value': '5'}]
+SETTINGS = [
+    {'name': 'hunt_attempts', 'value': '5'},
+    {'name': 'max_hunger', 'value': '3'},
+    {'name': 'hunger_pen_1', 'value': '1'},
+    {'name': 'hunger_pen_2', 'value': '3'},
+    {'name': 'hunger_pen_3', 'value': '5'},
+]
 
 SEASONS = [
     {"name": "Весна", "hunt_mod": -25, "herb_mod": 0, "is_active": False, "next": "Лето"},

@@ -1,17 +1,20 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import ClassVar
 
 from pydantic import computed_field
+from sqlalchemy.ext.asyncio.engine import create_async_engine
 from sqlmodel import (CheckConstraint, Column, Field, Integer,
                       Session, SQLModel, UniqueConstraint, and_, create_engine,
-                      func, select)
+                      select)
+from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel.sql.expression import SelectOfScalar
-
 from db.table_data import AGES, CLANS, SEASONS, SETTINGS
 from logs.logs import main_logger as logger
 
 engine = create_engine("sqlite:///cats.db")
+as_engine = create_async_engine("sqlite+aiosqlite:///cats.db")
 
 
 class Buffs(SQLModel, table=True):
@@ -116,6 +119,20 @@ class Seasons(SQLModel, table=True):
     herb_mod: int
     is_active: bool = False
     next: str
+
+    @staticmethod
+    def attrs():
+        return ['name', 'hunt_mod', 'herb_mod', 'next']
+    
+    def __str__(self):
+        return "\n".join(
+            [
+                f"Название: {self.name}",
+                f"Модификатор охоты: {self.hunt_mod}",
+                f"Модификатор травничества: {self.herb_mod}",
+                f"Следующий сезон: {self.next}",
+            ]
+        )
 
 
 class Clans(SQLModel, table=True):
@@ -425,6 +442,7 @@ class Characters(SQLModel, table=True):
     is_dead: bool = False
     curr_hunts: int = 0
     curr_herbs: int = 0
+    hunger_pen: ClassVar[dict[int, int]] = {}
     __table_args__ = (
         UniqueConstraint("name", name="characters_name_unique"),
         CheckConstraint(stamina.sa_column >= 0),
@@ -452,7 +470,7 @@ class Characters(SQLModel, table=True):
         CheckConstraint(faith.sa_column >= 0),
         CheckConstraint(faith.sa_column <= 10),
     )
-
+    
     @property
     def session(self):
         return Session(engine)
@@ -494,12 +512,24 @@ class Characters(SQLModel, table=True):
             "healing": self.get_actual_stat("healing"),
             "faith": self.get_actual_stat("faith"),
         }
+    
+    @staticmethod
+    def _get_hunger_pen() -> dict[int, int]:
+        query = select(Settings).where(Settings.name.contains("hunger_pen", autoescape=True))
+        with Session(engine) as s:
+            res: list[Settings] = s.exec(query).all()
+        hunger = {}
+        for i in res:
+            hunger[int(i.name.split("_")[-1])] = int(i.value)
+        return hunger
 
     def get_actual_stat(self, stat: str) -> int:
         res = self.__getattribute__(stat)
         res += self.get_buffs(stat)
         res += self.get_penalties(stat)
-        res -= self.hunger
+        if not self.hunger_pen:
+            Characters.hunger_pen = self._get_hunger_pen()
+        res -= self.hunger_pen.get(self.hunger, self.hunger)
         return res
 
     def get_buffs(self, stat: str) -> int:
@@ -577,7 +607,7 @@ class Characters(SQLModel, table=True):
 
     def __str__(self) -> str:
         if self.is_dead is True:
-            return "Мертв."
+            return f"{self.name}: мертв."
         if not self.clan_no:
             clan = "бродяга"
         else:
@@ -671,7 +701,20 @@ class Ages(SQLModel, table=True):
     name: str
     max_age: int
     food_req: int
-    next: str | None
+    next: str | None = None
+
+    @staticmethod
+    def attrs():
+        return ['name', 'max_age', 'food_req']
+
+    def __str__(self):
+        return "\n".join(
+            [
+                f"Название: {self.name}",
+                f"Верхняя граница: {self.max_age}",
+                f"Необходимое количество еды: {self.food_req}"
+            ]
+        )
 
 
 class Settings(SQLModel, table=True):
@@ -682,41 +725,69 @@ class Settings(SQLModel, table=True):
         UniqueConstraint("name", name="setting_name_unique"),
     )
 
+    def __str__(self):
+        return "\n".join(
+            [
+                f"Название: {self.name}",
+                f"Значение: {self.value}"
+            ]
+        )
+
 
 class DbBrowser:
     def __init__(self) -> None:
         self.session = Session(engine, expire_on_commit=False)
+        self.async_session = AsyncSession(as_engine)
 
     def commit(self):
         self.session.commit()
-
-    @property
-    def max_prey(self):
-        query = select(func.count()).select_from(Prey)
-        with self.session as s:
-            return s.exec(query).one()
 
     def add(self, table):
         with self.session as s:
             s.add(table)
             self.commit()
+    
+    async def as_add(self, table: type[SQLModel]):
+        async with self.async_session as s:
+            s.add(table)
+            await s.commit()
 
     def delete(self, table):
         with self.session as s:
             s.delete(table)
             self.commit()
+    
+    async def as_delete(self, table: type[SQLModel]):
+        async with self.async_session as s:
+            s.delete(table)
+            await s.commit()
 
     def select_one(self, query: SelectOfScalar) -> type[SQLModel]:
         with self.session as s:
             return s.exec(query).one()
+    
+    async def as_select_one(self, query: SelectOfScalar) -> type[SQLModel]:
+        async with self.async_session as s:
+            res = await s.exec(query)
+            return res.one()
 
     def select_many(self, query: SelectOfScalar):
         with self.session as s:
             return s.exec(query).all()
+        
+    async def as_select_many(self, query: SelectOfScalar):
+        async with self.async_session as s:
+            res = await s.exec(query)
+            return res.all()
 
     def safe_select_one(self, query: SelectOfScalar) -> type[SQLModel] | None:
         with self.session as s:
             return s.exec(query).first()
+    
+    async def as_safe_select_one(self, query: SelectOfScalar) -> type[SQLModel] | None:
+        async with self.async_session as s:
+            res = await s.exec(query)
+            return res.first()
     
     def fill_default(self) -> None:
         if not self.select_many(select(Ages)):

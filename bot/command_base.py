@@ -1,6 +1,7 @@
 from os import getenv
 from typing import Any
 
+from sqlmodel import SQLModel
 from telegram import Bot, Update, User
 from telegram.ext import ContextTypes
 
@@ -50,18 +51,18 @@ class CommandBase:
         str_list = list(map(str.strip, str_list))
         return str_list
 
-    async def make_params_for_db_entity_create(self, db_entity) -> dict[str, str]:
+    async def make_params_for_db_entity_create(self, db_entity: type[SQLModel]) -> dict[str, str]:
         params_dict = {}
         name, params_str = self.text.split("\n", 1)
         params_list = params_str.strip().split("\n")
         for item in params_list:
             col, value = self.prepare_for_db(item.strip().split(":", 1))
-            if col and value and col in db_entity.attrs():
+            if col and value and (col in db_entity.attrs() or col + '*' in db_entity.attrs()):
                 params_dict.update({col: value})
         params_dict["name"] = name.capitalize()
         return params_dict
 
-    async def make_params_for_db_entity_edit(self, db_entity) -> list:
+    async def make_params_for_db_entity_edit(self, db_entity: type[SQLModel]) -> list:
         params_dict = {}
         try:
             name, params_str = self.text.split("\n", 1)
@@ -73,7 +74,7 @@ class CommandBase:
         params_list = params_str.strip().split("\n")
         for item in params_list:
             col, value = self.prepare_for_db(item.strip().split(":", 1))
-            if col and (col in db_entity.attrs() or col in ("name", "Name")):
+            if col and (col in db_entity.attrs() or col + '*' in db_entity.attrs() or col in ("name", "Name")):
                 value = await self.__set_explicit_none(value)
                 params_dict.update({col: value})
         if params_dict == {}:

@@ -10,6 +10,8 @@ from bot.admin.herbs import HerbCommandHandler
 from bot.admin.injuries import InjuryCommandHandler
 from bot.admin.players import PlayerCommandHandler
 from bot.admin.prey import PreyCommandHandler
+from bot.admin.seasons import SeasonCommandHandler
+from bot.admin.system import SystemCommandHandler
 from bot.command_base import CommandBase
 from db.players import DbPlayerConfig
 from exceptions import NoRightException
@@ -30,6 +32,8 @@ class AdminCommandHandler(CommandBase):
             InjuryCommandHandler,
             ClanCommandHandler,
             HerbCommandHandler,
+            SeasonCommandHandler,
+            SystemCommandHandler,
         ]
 
     async def __aenter__(self):
