@@ -56,7 +56,7 @@ def get_single_inv_keyboard(clan_cat: bool = True) -> InlineKeyboardMarkup:
 
 
 def get_job_keyboard(job_list: list[Job]) -> InlineKeyboardMarkup:
-    keyboard = [[]]
+    keyboard = []
     for job in job_list:
-        keyboard[0].append(InlineKeyboardButton(job.name, callback_data=job.id))
+        keyboard.append([InlineKeyboardButton(job.name, callback_data=job.id)])
     return InlineKeyboardMarkup(keyboard)
