@@ -114,7 +114,7 @@ async def _age_cats():
     for char in chars:
         char.age += 2
         if char.age in breakpoints:
-            if char.age >= max_age.value:
+            if char.age >= int(max_age.value):
                 logger.info(f"Char {char.name} died of old age.")
                 char.is_dead = True
                 messages.append((char.player_chat_id, f"Ваш персонаж {char.name} умер от старости."))
