@@ -19,3 +19,4 @@ def set_up_logger(logger_name, file_name):
 main_logger = set_up_logger("main", "main.log")
 user_logger = set_up_logger("user_exc", "user_exc.log")
 schedule_logger = set_up_logger("schedule_logger", "schedule.log")
+system_logger = set_up_logger("system_logger", "system.log")
