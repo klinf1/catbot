@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 from typing import Any
 
 from telegram import Update
@@ -35,17 +34,7 @@ class SystemCommandHandler(CommandBase):
     
     @superuser_command
     async def advance_seasons(self):
-        full_advance = self.text == "YES"
-        reschedule = self.text == "YES RESCHEDULE"
-        if full_advance or reschedule:
-            for job in self.jobs:
-                if job.name == "advance_seasons":
-                    if reschedule:
-                        job.reschedule(CronTrigger(day=datetime.now().day))
-                    job.modify(next_run_time=datetime.now()+timedelta(seconds=5))
-                break
-        else:
-            self.season_db.set_next_season()
+        self.season_db.set_next_season()
     
     @superuser_command
     async def set_max_hunts(self):
@@ -118,6 +107,12 @@ class SystemCommandHandler(CommandBase):
         text = "Эта комманда позволяет менять параметры запуска джоба. Будьте КРАЙНЕ осторожны с ее использованием."
         self.context.user_data.update({"state": {"name": "settings", "action": "view_modify"}})
         await self.bot.send_message(self.chat_id, text, reply_markup=get_job_keyboard(self.jobs))
+    
+    @superuser_command
+    async def run_job(self):
+        for job in self.jobs:
+            if job.name.lower() == self.text.lower():
+                job.func()
 
 class SystemConv(CallbackBase):
 
@@ -155,4 +150,5 @@ class SystemTextCommand:
             k, v = param.split("=")
             params.update({k: v})
         job = job.modify(trigger=CronTrigger(**params))
+        self.context.user_data.__delitem__("state")
         await self.context.bot.send_message(self.update.effective_chat.id, f"Джоб {job.name} изменен успешно")
