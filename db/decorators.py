@@ -2,6 +2,7 @@ from sqlmodel import Session, select
 
 from db import Players, engine
 from exceptions import BannedException, NoRightException
+from logs.logs import main_logger as logger
 
 
 def not_banned(func):
@@ -32,5 +33,15 @@ def superuser_command(func):
             )
             raise NoRightException("No rights!")
         return func(self, *args, **kwargs)
+
+    return wrapper
+
+
+def not_a_command(func):
+    async def dummy():
+        return None
+    def wrapper(self, *args, **kwargs):
+        logger.debug("Not a proper command, skipping...")
+        return dummy()
 
     return wrapper
