@@ -167,7 +167,7 @@ class SystemTextCommand:
         for param in params_list:
             param = param.strip()
             k, v = param.split("=")
-            params.update({k: v})
+            params.update({k.strip(): v.strip()})
         job = job.modify(trigger=CronTrigger(**params))
         self.context.user_data.__delitem__("state")
         logger.info(f"modify_job params {params} for {self.update.message.from_user.username}")
