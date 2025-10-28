@@ -1,3 +1,4 @@
+from apscheduler.job import Job
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from bot.const import (CARRY_PREY, CLEAR_INVENTORY, EAT_PREY, LEAVE_PREY, TAKE_PREY,
@@ -51,4 +52,11 @@ def get_single_inv_keyboard(clan_cat: bool = True) -> InlineKeyboardMarkup:
     ]
     if clan_cat is True:
         keyboard[0].append(InlineKeyboardButton("Унести в кучу", callback_data=CARRY_PREY))
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_job_keyboard(job_list: list[Job]) -> InlineKeyboardMarkup:
+    keyboard = [[]]
+    for job in job_list:
+        keyboard[0].append(InlineKeyboardButton(job.name, callback_data=job.id))
     return InlineKeyboardMarkup(keyboard)

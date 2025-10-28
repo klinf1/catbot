@@ -1,16 +1,14 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from bot.buttons import (get_hunt_keyboard, get_single_inv_keyboard,
+from bot.buttons import (get_single_inv_keyboard,
                          get_view_inv_keyboard)
 from bot.command_base import CallbackBase
-from bot.const import EAT_PREY, LEAVE_PREY, TAKE_PREY
 from db.characters import DbCharacterConfig
 from db.eat import Eater
 from db.inventory import InventoryManager
 from db.pile import PreyPileConfig
 from db.prey import DbPreyConfig
-from logs.logs import main_logger as logger
 
 
 class HuntConversation(CallbackBase):

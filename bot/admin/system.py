@@ -6,7 +6,8 @@ from telegram.ext import ContextTypes
 from apscheduler.job import Job
 from apscheduler.triggers.cron import CronTrigger
 
-from bot.command_base import CommandBase
+from bot.buttons import get_job_keyboard
+from bot.command_base import CommandBase, CallbackBase
 from db.decorators import superuser_command
 from db.seasons import SeasonsConfig
 from db.settings import SettingConfig
@@ -28,13 +29,16 @@ class SystemCommandHandler(CommandBase):
         self.season_db = SeasonsConfig()
         self.setting_db = SettingConfig()
     
+    @property
+    def jobs(self) -> list[Job]:
+        return scheduler.get_jobs()
+    
     @superuser_command
     async def advance_seasons(self):
         full_advance = self.text == "YES"
         reschedule = self.text == "YES RESCHEDULE"
         if full_advance or reschedule:
-            jobs: list[Job] = scheduler.get_jobs()
-            for job in jobs:
+            for job in self.jobs:
                 if job.name == "advance_seasons":
                     if reschedule:
                         job.reschedule(CronTrigger(day=datetime.now().day))
@@ -94,19 +98,61 @@ class SystemCommandHandler(CommandBase):
         self.setting_db.set_setting(f"hunger_pen_{severity}", value)
 
     async def view_current_jobs(self):
-        jobs: list[Job] = scheduler.get_jobs()
         res = ""
-        for job in jobs:
+        for job in self.jobs:
+            job_str = f"Название: {job.name}\nТриггер: {job.trigger}\nId: {job.id}\nСледующий запуск: {job.next_run_time.replace(tzinfo=None)}"
             res = "\n".join(
                 [
-                    "_________________",
                     res,
-                    f"Название: {job.name}",
-                    f"Триггер: {job.trigger}",
-                    f"Следующий запуск: {job.next_run_time.replace(tzinfo=None)}"
+                    job_str,
+                    "_________________",
                 ]
             )
         await self.bot.send_message(self.chat_id, res)
     
     async def view_current_settings(self):
         return await self.view_list_from_db(self.setting_db.get_all_settings())
+
+    @superuser_command
+    async def modify_job(self):
+        text = "Эта комманда позволяет менять параметры запуска джоба. Будьте КРАЙНЕ осторожны с ее использованием."
+        self.context.user_data.update({"state": {"name": "settings", "action": "view_modify"}})
+        await self.bot.send_message(self.chat_id, text, reply_markup=get_job_keyboard(self.jobs))
+
+class SystemConv(CallbackBase):
+
+    def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        super().__init__(update, context)
+    
+    async def route_conv(self):
+        if not (state := self.context.user_data.get("state")):
+            return None
+        match state.get("action"):
+            case "view_modify":
+                job_id = self.update.callback_query.data
+                job: Job = scheduler.get_job(job_id)
+                text = "\n".join([f"Выбран джоб {job.name}. Сейчас он запускается {job.trigger}",
+                                  "Для редактирования джоба в следующем сообщении введите параметры триггера",
+                                  "Правила можно посмотреть в документации:",
+                                  "https://docs.google.com/spreadsheets/d/1X3CUqSVVF1FrHxGJyhlO8QApehsUR5AnN9oqJJSl_K0/edit?gid=0#gid=0"])
+                self.context.user_data.update({"state": {"name": "settings", "action": "set_trigger", "id": job.id}})
+                await self.bot.send_message(self.chat_id, text)
+
+
+class SystemTextCommand:
+    
+    def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        self.update = update
+        self.context = context
+        self.job_id: str = context.user_data["state"]["id"]
+    
+    async def job_modify(self):
+        job: Job = scheduler.get_job(self.job_id)
+        params_list = self.update.message.text.strip().split(";")
+        params = {}
+        for param in params_list:
+            param = param.strip()
+            k, v = param.split("=")
+            params.update({k: v})
+        job = job.modify(trigger=CronTrigger(**params))
+        await self.context.bot.send_message(self.update.effective_chat.id, f"Джоб {job.name} изменен успешно")

@@ -2,6 +2,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.admin.admin_commands import AdminCommandHandler
+from bot.admin.system import SystemConv, SystemTextCommand
 from bot.common_commands import CommonCommandHandler
 from bot.const import EAT_PREY, LEAVE_PREY, TAKE_PREY
 from bot.conversations import HuntConversation, InvBaseConv, InvViewConv, PreyViewConv
@@ -31,10 +32,13 @@ class ConversationRouter:
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         self.update = update
         self.context = context
+        self.system = SystemTextCommand(update, context)
 
     async def route(self):
-        if self.context.user_data.get("state"):
-            pass
+        if state := self.context.user_data.get("state"):
+            match state.get("name"):
+                case "settings":
+                    await self.system.job_modify()
 
 
 class CallbackRouter:
@@ -45,6 +49,7 @@ class CallbackRouter:
         self.inv_base = InvBaseConv(update, context)
         self.inv_single = InvViewConv(update, context)
         self.prey_view = PreyViewConv(update, context)
+        self.settings = SystemConv(update, context)
 
     async def route(self):
         if state := self.context.user_data.get("state", {}):
@@ -62,3 +67,6 @@ class CallbackRouter:
                 case "prey_view":
                     async with self.prey_view as conv:
                         await conv.action()
+                case "settings":
+                    async with self.settings as conv:
+                        await conv.route_conv()
