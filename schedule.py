@@ -110,10 +110,11 @@ async def _age_cats():
     chars: list[Characters] = db.select_many(active_chars)
     ages: list[Ages] = db.select_many(ages)
     breakpoints = [age.max_age for age in ages]
+    max_age: Settings = db.select_one(select(Settings).where(Settings.name == "max_age"))
     for char in chars:
         char.age += 2
         if char.age in breakpoints:
-            if char.age >= 150:
+            if char.age >= max_age.value:
                 logger.info(f"Char {char.name} died of old age.")
                 char.is_dead = True
                 messages.append((char.player_chat_id, f"Ваш персонаж {char.name} умер от старости."))

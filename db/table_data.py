@@ -4,6 +4,7 @@ SETTINGS = [
     {'name': 'hunger_pen_1', 'value': '1'},
     {'name': 'hunger_pen_2', 'value': '3'},
     {'name': 'hunger_pen_3', 'value': '5'},
+    {'name': 'max_age', 'value': '150'}
 ]
 
 SEASONS = [
