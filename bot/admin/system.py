@@ -46,7 +46,7 @@ class SystemCommandHandler(CommandBase):
     @superuser_command
     async def set_max_hunger(self):
         if not self.validate_setting(self.text):
-            await self.bot.send_message(self.chat_id, "Максимальная степень голода быть положительным целым числом!")
+            await self.bot.send_message(self.chat_id, "Максимальная степень голода должна быть положительным целым числом!")
         self.setting_db.set_setting("max_hunger", self.text)
     
     @superuser_command
@@ -113,6 +113,12 @@ class SystemCommandHandler(CommandBase):
         for job in self.jobs:
             if job.name.lower() == self.text.lower():
                 job.func()
+    
+    @superuser_command
+    async def set_max_age(self):
+        if not self.validate_setting(self.text):
+            await self.bot.send_message(self.chat_id, "Максимальный возраст должен быть положительным целым числом!")
+        self.setting_db.set_setting("max_age", self.text)
 
 class SystemConv(CallbackBase):
 
