@@ -21,10 +21,7 @@ class SeasonCommandHandler(CommandBase):
     
     async def set_food_req(self):
         name, val = self.text.strip().split("\n")
-        try:
-            val = int(val.strip())
-            assert val > 0
-        except Exception:
+        if not self.validate_setting(val):
             await self.bot.send_message(self.chat_id, "Возраст должен быть целым числом больше 0!")
-            return None
+            return
         await self.bot.send_message(self.chat_id, str(self.age_db.edit_food_req(name.strip().capitalize(), val)))

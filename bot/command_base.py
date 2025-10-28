@@ -82,6 +82,15 @@ class CommandBase:
                 "Ошибка при формировании параметров для замены: отсутствуют подходящие параметры."
             )
         return [name.capitalize(), params_dict]
+    
+    @staticmethod
+    def validate_setting(val: Any) -> bool:
+        try:
+            val = int(val)
+            assert val > 0
+        except Exception:
+            return False
+        return True
 
 
 class CallbackBase:

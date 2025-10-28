@@ -45,24 +45,24 @@ class SystemCommandHandler(CommandBase):
     
     @superuser_command
     async def set_max_hunts(self):
-        if not validate_setting(self.text):
+        if not self.validate_setting(self.text):
             await self.bot.send_message(self.chat_id, "Количество охот должно быть положительным целым числом!")
             return
         self.setting_db.set_setting("hunt_attempts", self.text)
     
     @superuser_command
     async def set_max_hunger(self):
-        if not validate_setting(self.text):
+        if not self.validate_setting(self.text):
             await self.bot.send_message(self.chat_id, "Максимальная степень голода быть положительным целым числом!")
         self.setting_db.set_setting("max_hunger", self.text)
     
     @superuser_command
     async def add_new_hunger_pen(self):
         severity, value = list(map(str.strip, self.text.split(":", 1)))
-        if not validate_setting(severity):
+        if not self.validate_setting(severity):
             await self.bot.send_message(self.chat_id, "Степень голода должна быть положительным целым числом!")
             return
-        if not validate_setting(value):
+        if not self.validate_setting(value):
             await self.bot.send_message(self.chat_id, "Штраф должен быть положительным целым числом!")
             return
         curr_pens = self.setting_db.curr_hunger_pens()
@@ -78,10 +78,10 @@ class SystemCommandHandler(CommandBase):
     @superuser_command
     async def set_hunger_pen(self):
         severity, value = list(map(str.strip, self.text.split(":", 1)))
-        if not validate_setting(severity):
+        if not self.validate_setting(severity):
             await self.bot.send_message(self.chat_id, "Степень голода должна быть положительным целым числом!")
             return
-        if not validate_setting(value):
+        if not self.validate_setting(value):
             await self.bot.send_message(self.chat_id, "Штраф должен быть положительным целым числом!")
             return
         curr_pens = self.setting_db.curr_hunger_pens()
