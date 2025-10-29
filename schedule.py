@@ -23,10 +23,10 @@ def create_schedules() -> None:
     scheduler.start()
     if not store.get_all_jobs():
         logger.debug("No jobs found, creating...")
-        scheduler.add_job(advance_seasons, 'cron', name="advance_seasons", second=1)  # day=1
-        scheduler.add_job(cut_pile, 'cron', name="cut_pile", second=1)
-        scheduler.add_job(check_nutrition, 'cron', name="check_nutrition", second=1)
-        scheduler.add_job(age_cats, 'cron', name="age_cats", second=1)
+        scheduler.add_job(advance_seasons, 'cron', name="advance_seasons", minute=1)  # day=1
+        scheduler.add_job(cut_pile, 'cron', name="cut_pile", minute=1)
+        scheduler.add_job(check_nutrition, 'cron', name="check_nutrition", minute=1)
+        scheduler.add_job(age_cats, 'cron', name="age_cats", minute=1)
         scheduler.add_job(reset_hunt_attempts, 'cron', name="reset_hunt_attempts", second=2)  # day_of_week=0
     logger.debug("Schedule creation end")
 
