@@ -38,7 +38,13 @@ class PreyPileConfig(DbBrowser):
         clan = self._get_clan(clan)
         prey = self._get_prey(prey)
         query = select(PreyPile).where(and_(PreyPile.clan == clan.no, PreyPile.prey == prey.no))
-        item = self.safe_select_one(query)
+        item: PreyPile = self.safe_select_one(query)
         if item:
             self.delete(item)
-
+            return item
+        return None
+    
+    def get_prey_for_clan(self, clan: int | str | Clans):
+        clan = self._get_clan(clan)
+        query = select(Prey).join(PreyPile, onclause= Prey.no == PreyPile.prey).where(PreyPile.clan == clan.no)
+        return self.select_many(query)

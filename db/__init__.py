@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 from pydantic import computed_field
 from sqlalchemy.ext.asyncio.engine import create_async_engine
@@ -292,7 +292,7 @@ class CharacterInventory(SQLModel, table=True):
 
     no: int | None = Field(primary_key=True, default=None, index=True)
     char_no: int = Field(foreign_key="characters.no", ondelete="CASCADE")
-    type: str
+    type: Literal["prey", "herb"]
     item: int
 
 

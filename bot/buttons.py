@@ -3,6 +3,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from bot.const import (CARRY_PREY, CLEAR_INVENTORY, EAT_PREY, LEAVE_PREY, TAKE_PREY,
                        VIEW_INVENTORY)
+from db import Prey
 from db.inventory import InventoryManager
 from db.herbs import HerbConfig
 from db.prey import DbPreyConfig
@@ -59,4 +60,22 @@ def get_job_keyboard(job_list: list[Job]) -> InlineKeyboardMarkup:
     keyboard = []
     for job in job_list:
         keyboard.append([InlineKeyboardButton(job.name, callback_data=job.id)])
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_pile_keyboard(prey: list[Prey]):
+    keyboard = []
+    for i in prey:
+        keyboard.append([InlineKeyboardButton(i.name, callback_data=i.no)])
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_pile_prey_keyboard():
+    keyboard = [
+        [
+            InlineKeyboardButton("Cъесть", callback_data="eat"),
+            InlineKeyboardButton("Взять в инвентарь", callback_data="take"),
+            InlineKeyboardButton("Оставить", callback_data="leave"),
+        ]
+    ]
     return InlineKeyboardMarkup(keyboard)

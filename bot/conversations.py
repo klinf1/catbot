@@ -2,7 +2,8 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.buttons import (get_single_inv_keyboard,
-                         get_view_inv_keyboard)
+                         get_view_inv_keyboard,
+                         get_pile_prey_keyboard)
 from bot.command_base import CallbackBase
 from db.characters import DbCharacterConfig
 from db.eat import Eater
@@ -34,6 +35,7 @@ class HuntConversation(CallbackBase):
             case "eat_prey":
                 res = self.nom.eat(char, prey)
                 await self.context.bot.send_message(self.chat_id, res)
+        del self.context.user_data["state"]
 
 
 class InvBaseConv(CallbackBase):
@@ -119,3 +121,38 @@ class PreyViewConv(CallbackBase):
                 res = self.nom.eat(char, prey)
                 self.inv.remove_item(char.no, prey.no)
                 await self.context.bot.send_message(self.chat_id, res)
+        del self.context.user_data["state"]
+
+
+class PileConv(CallbackBase):
+    def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        super().__init__(update, context)
+        self.prey_db = DbPreyConfig()
+        self.nom = Eater()
+        self.pile = PreyPileConfig()
+        self.inv = InventoryManager()
+
+    async def pile_view(self):
+        prey = self.prey_db.get_prey_by_no(int(self.query_data))
+        self.context.user_data["state"]["name"] = "pile_prey"
+        self.context.user_data["state"]["args"]["prey"] = prey
+        await self.bot.send_message(
+            self.chat_id,
+            "Что бы вы хотели сделать?",
+            reply_markup=get_pile_prey_keyboard(),
+        )
+
+    async def pile_prey(self):
+        prey = self.context.user_data["state"]["args"]["prey"]
+        char = self.context.user_data["state"]["args"]["cat"]
+        match self.query_data:
+            case "leave":
+                return
+            case "eat":
+                self.pile.get_from_pile(char.clan_no, prey)
+                await self.bot.send_message(self.chat_id, self.nom.eat(char, prey))
+            case "take":
+                await self.bot.send_message(
+                    self.chat_id, self.inv.add_item(char.no, "prey", prey.no)
+                )
+        del self.context.user_data["state"]

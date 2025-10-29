@@ -6,6 +6,7 @@ from bot.command_base import CommandBase
 from bot.herbs import HerbCommandHandler
 from bot.hunt import HuntCommandHandler
 from bot.inventory import InventoryCommandHandler
+from bot.pile import PileCommandHandler
 from db import Players
 from db.characters import DbCharacterUser
 from db.players import DbPlayerConfig
@@ -31,6 +32,7 @@ class CommonCommandHandler(CommandBase):
         self.herb_db = HerbCommandHandler(update, context)
         self.inventory_db = InventoryCommandHandler(update, context)
         self.character_user_db = DbCharacterUser(update.message.from_user.id)
+        self.pile_db = PileCommandHandler(update, context)
 
     async def __aenter__(self):
         main_logger.debug(
@@ -58,7 +60,7 @@ class CommonCommandHandler(CommandBase):
             and (not player.is_admin or not player.is_superuser)
         ):
             await self.bot.send_message(
-                self.chat_id, f"Эта команда доступна только в групповом чате!"
+                self.chat_id, "Эта команда доступна только в групповом чате!"
             )
             raise WrongChatError
         return self
@@ -157,3 +159,6 @@ class CommonCommandHandler(CommandBase):
 
     async def inventory(self):
         await self.inventory_db.send_inventory_message()
+    
+    async def pile(self):
+        await self.pile_db.send_pile_message()

@@ -1,27 +1,23 @@
 from telegram import Update
-from telegram.ext import ContextTypes, ConversationHandler
+from telegram.ext import ContextTypes
 
-from bot.buttons import get_base_inv_keyboard
+from bot.buttons import get_pile_keyboard
 from bot.command_base import CommandBase
 from db.characters import DbCharacterConfig
-from db.inventory import InventoryManager
-from exceptions import CharacterDeadException, CharacterFrozenException
-from logs.logs import main_logger
-from utils import capitalize_for_db
+from db.pile import PreyPileConfig
 
 
-class InventoryCommandHandler(CommandBase):
+class PileCommandHandler(CommandBase):
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         super().__init__(update, context)
-        self.inventory_db = InventoryManager()
-        self.character_db = DbCharacterConfig()
-
-    async def send_inventory_message(self):
-        char = self.character_db.get_char_by_name(self.text.capitalize())
+        self.char_db = DbCharacterConfig()
+        self.pile_db = PreyPileConfig()
+    
+    async def send_pile_message(self):
+        char = self.char_db.get_char_by_name(self.text.capitalize())
         if not char:
             await self.bot.send_message(self.chat_id, "Персонаж с таким именем не найден")
-            return
-        if char.player_chat_id != self.user.id:
+        elif char.player_chat_id != self.user.id:
             await self.bot.send_message(
                 self.chat_id, "Этот персонаж не принадлежит вам!"
             )
@@ -32,18 +28,23 @@ class InventoryCommandHandler(CommandBase):
         elif char.is_dead:
             await self.bot.send_message(
                 self.chat_id, "Этот персонаж мертв!"
+            )
+        elif not char.clan_no:
+            await self.bot.send_message(
+                self.chat_id, "Этот персонаж не принадлежит ни одному клану!"
             )    
         else:
             self.context.user_data.update(
                 {
                     "state": {
-                        "name": "inv_base",
-                        "args": {"cat": self.text},
+                        "name": "pile_view",
+                        "args": {"cat": char},
                     }
                 }
             )
+            prey = self.pile_db.get_prey_for_clan(char.clan_no)
             await self.bot.send_message(
                 self.chat_id,
-                "Что бы вы хотели сделать?",
-                reply_markup=get_base_inv_keyboard(),
+                "Список дичи в вашем клане:",
+                reply_markup=get_pile_keyboard(prey),
             )
