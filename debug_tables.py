@@ -6,13 +6,13 @@ db = DbBrowser()
 
 
 def create_test_data():
-    char_data = [{"name": "ТестКотенок", "player_chat_id": 397012508, "age": 2, "hunting": 1},
-                 {"name": "ТестПодросток", "player_chat_id": 397012508, "age": 8, "hunting": 5},
-                 {"name": "ТестВзрослый", "player_chat_id": 397012508, "age": 14, "hunting": 10}]
+    char_data = [{"name": "Тест_котенок", "player_chat_id": 397012508, "age": 2, "hunting": 1, "clan_no": 1},
+                 {"name": "Тест_подросток", "player_chat_id": 397012508, "age": 8, "hunting": 5},
+                 {"name": "Тест_взрослый", "player_chat_id": 397012508, "age": 14, "hunting": 10}]
     prey_data = [
-        {"name": "ТестЛегкая", "stat": "agility", "amount": 1, "rarity": 100, "sum_required": 1},
-        {"name": "ТестСредняя", "stat": "agility", "amount": 2, "rarity": 50, "sum_required": 5},
-        {"name": "ТестСложная", "stat": "agility", "amount": 5, "rarity": 20, "sum_required": 10},
+        {"name": "Тест_легкая", "stat": "agility", "amount": 1, "rarity": 100, "sum_required": 1},
+        {"name": "Тест_средняя", "stat": "agility", "amount": 2, "rarity": 50, "sum_required": 5},
+        {"name": "Тест_сложная", "stat": "agility", "amount": 5, "rarity": 20, "sum_required": 10},
     ]
     prey_pile_data = [
         {"clan": 1, "prey": 1},

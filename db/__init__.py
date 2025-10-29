@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import ClassVar, Literal
+from typing import Any, ClassVar
 
-from pydantic import computed_field
+from pydantic import computed_field, field_validator
 from sqlalchemy.ext.asyncio.engine import create_async_engine
 from sqlmodel import (CheckConstraint, Column, Field, Integer,
                       Session, SQLModel, UniqueConstraint, and_, create_engine,
@@ -292,8 +292,15 @@ class CharacterInventory(SQLModel, table=True):
 
     no: int | None = Field(primary_key=True, default=None, index=True)
     char_no: int = Field(foreign_key="characters.no", ondelete="CASCADE")
-    type: Literal["prey", "herb"]
+    type: str
     item: int
+    
+    @field_validator("type")
+    @classmethod
+    def check_type(cls, v: Any):
+        if v not in ["prey", "herb"]:
+            raise ValueError("Тип содержимого может быть только prey | herb!")
+        return v
 
 
 class Roles(SQLModel, table=True):
