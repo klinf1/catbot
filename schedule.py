@@ -4,6 +4,7 @@ import os
 
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
+from dotenv import load_dotenv
 from sqlmodel import select, and_
 from telegram import Bot
 
@@ -11,6 +12,7 @@ from db import Ages, Characters, DbBrowser, PreyPile, Settings, engine, SQLModel
 from db.seasons import SeasonsConfig
 from logs.logs import schedule_logger as logger
 
+load_dotenv()
 db = DbBrowser()
 active_chars = select(Characters).where(and_(Characters.is_dead == False, Characters.is_frozen == False))  #noqa: E712
 scheduler = BackgroundScheduler()
@@ -65,7 +67,6 @@ async def _check_nutrition():
     logger.info("Nutrition check start")
     db = DbBrowser()
     bot = Bot(token=os.getenv("TOKEN"))
-    messages: list[tuple[int, str]] = []
     chars: list[Characters] = db.select_many(active_chars)
     max_hunger: Settings = db.select_one(select(Settings).where(Settings.name == "max_hunger"))
     for char in chars:
@@ -77,27 +78,18 @@ async def _check_nutrition():
                 char.is_dead = True
                 db.add(char)
                 logger.info(f"Character {char.name} died of hunger UwU")
-                messages.append((char.player_chat_id, f"Ваш персонаж {char.name} умер от голода!"))
                 await bot.send_message(
                     char.player_chat_id,
                     f"Ваш персонаж {char.name} умер от голода!"
                 )
                 continue
             db.add(char)
-            logger.debug(f"Hunger added for {char.name} new {char.hunger}")
-            messages.append((char.player_chat_id, f"Ваш персонаж {char.name} недостаточно поел в прошлом сезоне и получил одну степень голода!"))
-            await bot.send_message(
-                   char.player_chat_id,
-                   f"Ваш персонаж {char.name} недостаточно поел в прошлом сезоне и получил одну степень голода!"
-                   f" Текущий голод равен {char.hunger}",
-                )
-            
+            logger.debug(f"Hunger added for {char.name} new {char.hunger}")            
         if char.nutrition >= age.food_req and char.hunger != 0:
             logger.debug(f"Hunger reset for {char.name}")
             char.hunger = 0
             db.add(char)
     logger.info("Nutrition check end")
-    return messages
 
 
 async def _age_cats():
@@ -105,7 +97,6 @@ async def _age_cats():
     bot = Bot(token=os.getenv("TOKEN"))
     db = DbBrowser()
     admin_chat = os.getenv("ADMIN_CHAT")
-    messages: list[tuple[int, str]] = []
     ages = select(Ages)
     chars: list[Characters] = db.select_many(active_chars)
     ages: list[Ages] = db.select_many(ages)
@@ -117,15 +108,12 @@ async def _age_cats():
             if char.age >= int(max_age.value):
                 logger.info(f"Char {char.name} died of old age.")
                 char.is_dead = True
-                messages.append((char.player_chat_id, f"Ваш персонаж {char.name} умер от старости."))
                 await bot.send_message(char.player_chat_id, f"Ваш персонаж {char.name} умер от старости.")
             else:
                 logger.info(f"Char {char.name} grown to {char.age} moons.")
-                messages.append((admin_chat, f"Персонаж {char.name} вырос до {char.age} лун! Нужно сменить ему характеристики!"))
                 await bot.send_message(admin_chat, f"Персонаж {char.name} вырос до {char.age} лун! Нужно сменить ему характеристики!")
         db.add(char)
     logger.info("Age end")
-    return messages
 
 
 def reset_hunt_attempts():
