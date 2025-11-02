@@ -15,7 +15,7 @@ from utils import prepare_for_db
 class CharacterCommandHandler(CommandBase):
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         super().__init__(update, context)
-        self.char_config = DbCharacterConfig()
+        self.char_config = DbCharacterConfig(self.user.username)
         self.player_db = DbPlayerConfig()
 
     async def add_char(self):
@@ -80,13 +80,19 @@ class CharacterCommandHandler(CommandBase):
         params_dict = {}
         name, params_str = self.text.strip().split("\n", 1)
         params_list = params_str.strip().split("\n")
+        reason = ""
         for item in params_list:
             col, val = prepare_for_db(item.strip().split(":", 1))
             if col and val and col in Characters.attrs() or col.lower() == "name":
                 params_dict.update({col: val})
+            if col == "reason":
+                reason = val
         # params_dict.update({"name": name.capitalize()})
+        if not reason:
+            await self.bot.send_message(self.chat_id, "Пожалуйста, укажите причину изменения характеристик")
+            return
         try:
-            self.char_config.edit_character(name, params_dict)
+            self.char_config.edit_character(name, params_dict, reason)
             new_char = self.char_config.get_char_by_name(
                 params_dict.get("name") or name.capitalize()
             )
@@ -95,25 +101,53 @@ class CharacterCommandHandler(CommandBase):
             await self.bot.send_message(
                 self.chat_id, f"Не найден клан {params_dict['clan_no']}"
             )
-    
+
     async def freeze(self):
         name = self.text.strip().capitalize()
         self.char_config.edit_freeze_char_by_name(name)
-        await self.bot.send_message(self.chat_id, f'Персонаж {name} заморожен.', reply_to_message_id=self.update.message.id)
-    
+        await self.bot.send_message(
+            self.chat_id,
+            f"Персонаж {name} заморожен.",
+            reply_to_message_id=self.update.message.id,
+        )
+
     async def unfreeze(self):
         name = self.text.strip().capitalize()
         self.char_config.edit_freeze_char_by_name(name, False)
-        await self.bot.send_message(self.chat_id, f'Персонаж {name} разморожен.', reply_to_message_id=self.update.message.id)
-    
+        await self.bot.send_message(
+            self.chat_id,
+            f"Персонаж {name} разморожен.",
+            reply_to_message_id=self.update.message.id,
+        )
+
     @superuser_command
     async def kill(self):
-        name = self.text
-        self.char_config.edit_death_char_by_name(name, True)
-        await self.bot.send_message(self.chat_id, f'Персонаж {name} убит.', reply_to_message_id=self.update.message.id)
-    
+        if "\n" in self.text:
+            name, reason = self.text.split("\n")
+        else:
+            await self.bot.send_message(self.chat_id, "Пожалуйста, укажите причину убийства")
+            return
+        self.char_config.edit_death_char_by_name(
+            name.capitalize().strip(), self.user.username, reason, True
+        )
+        await self.bot.send_message(
+            self.chat_id,
+            f"Персонаж {name} убит.",
+            reply_to_message_id=self.update.message.id,
+        )
+
     @superuser_command
     async def resurrect(self):
-        name = self.text
-        self.char_config.edit_death_char_by_name(name, False)
-        await self.bot.send_message(self.chat_id, f'Персонаж {name} воскрешен.', reply_to_message_id=self.update.message.id)
+        if "\n" in self.text:
+            name, reason = self.text.split("\n")
+        else:
+            await self.bot.send_message(self.chat_id, "Пожалуйста, укажите причину воскрешения")
+            return
+        self.char_config.edit_death_char_by_name(
+            name.capitalize().strip(), self.user.username, reason, False
+        )
+        await self.bot.send_message(
+            self.chat_id,
+            f"Персонаж {name} воскрешен.",
+            reply_to_message_id=self.update.message.id,
+        )

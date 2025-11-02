@@ -30,8 +30,9 @@ class DbCharacterUser(DbBrowser):
 class DbCharacterConfig(DbBrowser):
     session: Session
 
-    def __init__(self) -> None:
+    def __init__(self, admin: str | None = "") -> None:
         super().__init__()
+        self.admin = admin
 
     def get_char_by_name(self, name: str):
         query = select(Characters).where(Characters.name == name)
@@ -61,9 +62,10 @@ class DbCharacterConfig(DbBrowser):
         char = Characters(**params)
         self.add(char)
 
-    def edit_character(self, name: str, params: dict[str, Any]):
+    def edit_character(self, name: str, params: dict[str, Any], reason: str):
         char = self.get_char_by_name(name.capitalize())
         for column, value in params.items():
+            self.ins_char_hist(char.no, self.admin, column, getattr(char, column), str(value), reason)
             char = self._edit_single_stat(char, column, value)
         self.add(char)
 
@@ -71,23 +73,27 @@ class DbCharacterConfig(DbBrowser):
         char = self.get_char_by_no(no)
         self.delete(char)
 
-    def edit_freeze_char_by_no(self, no: int, flag: bool = True):
+    def edit_freeze_char_by_no(self, no: int, reason: str, flag: bool = True):
         char = self.get_char_by_no(no)
+        self.ins_char_hist(char.no, self.admin, "is_frozen", str(char.is_frozen), str(flag), reason)
         char.is_frozen = flag
         self.add(char)
     
-    def edit_freeze_char_by_name(self, name: str, flag: bool = True):
+    def edit_freeze_char_by_name(self, name: str, reason: str, flag: bool = True):
         char = self.get_char_by_name(name)
+        self.ins_char_hist(char.no, self.admin, "is_frozen", str(char.is_frozen), str(flag), reason)
         char.is_frozen = flag
         self.add(char)
 
-    def edit_death_char_by_no(self, no: int, flag: bool = True):
+    def edit_death_char_by_no(self, no: int, reason: str, flag: bool = True):
         char = self.get_char_by_no(no)
+        self.ins_char_hist(char.no, self.admin, "is_dead", str(char.is_dead), str(flag), reason)
         char.is_dead = flag
         self.add(char)
     
-    def edit_death_char_by_name(self, name: str, flag: bool = True):
+    def edit_death_char_by_name(self, name: str, reason: str, flag: bool = True):
         char = self.get_char_by_name(name)
+        self.ins_char_hist(char.no, self.admin, "is_dead", str(char.is_dead), str(flag), reason)
         char.is_dead = flag
         self.add(char)
 

@@ -9,7 +9,7 @@ from db.players import DbPlayerConfig
 class PlayerCommandHandler(CommandBase):
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         super().__init__(update, context)
-        self.player_db = DbPlayerConfig()
+        self.player_db = DbPlayerConfig(self.user.username)
 
     async def ban(self):
         success, reply = self.player_db.ban_player(self.text)

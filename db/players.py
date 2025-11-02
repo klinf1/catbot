@@ -7,8 +7,10 @@ from db.characters import DbCharacterConfig
 class DbPlayerConfig(DbBrowser):
     session: Session
 
-    def __init__(self) -> None:
+    def __init__(self, admin: str | None = "") -> None:
         super().__init__()
+        self.admin = admin
+        self.player_config = DbCharacterConfig(admin)
 
     def add_player(
         self,
@@ -38,7 +40,7 @@ class DbPlayerConfig(DbBrowser):
             )
             with self.session as s:
                 for cat in s.exec(query).all():
-                    DbCharacterConfig().edit_freeze_char_by_no(cat.no, True)
+                    self.player_config.edit_freeze_char_by_no(cat.no, True)
             return True, f"Игрок {username} забанен успешно."
         else:
             return False, "Не нужно пытаться банить админов!"
@@ -55,7 +57,7 @@ class DbPlayerConfig(DbBrowser):
         query = select(Characters).where(Characters.player_chat_id == player.chat_id)
         with self.session as s:
             for cat in s.exec(query).all():
-                DbCharacterConfig().edit_freeze_char_by_no(cat.no, False)
+                self.player_config.edit_freeze_char_by_no(cat.no, False)
         return True, f"Игрок {username} разбанен."
 
     def check_if_user_is_admin(self, chat_id) -> bool:

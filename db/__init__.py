@@ -741,6 +741,17 @@ class Settings(SQLModel, table=True):
         )
 
 
+class CharacterHistory(SQLModel, table=True):
+    no: int | None = Field(primary_key=True, default=None, index=True)
+    char_no: int = Field(foreign_key="characters.no", ondelete="CASCADE", index=True)
+    time: datetime = Field(default_factory=datetime.now)
+    user: str = Field(index=True)
+    field: str = Field(index=True)
+    old: str
+    new: str
+    reason: str | None = None
+
+
 class DbBrowser:
     def __init__(self) -> None:
         self.session = Session(engine, expire_on_commit=False)
@@ -810,6 +821,9 @@ class DbBrowser:
             for i in SETTINGS:
                 self.add(Settings(**i))
         return None
+    
+    def ins_char_hist(self, char, user, field, old, new, reason):
+        self.add(CharacterHistory(char_no=char, user=user, field=field, old=old, new=new, reason=reason))
     
     def add_admins(self, ids: list[str], usernames: list[str]):
         for id, username in zip(ids, usernames):
