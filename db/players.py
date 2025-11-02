@@ -25,11 +25,11 @@ class DbPlayerConfig(DbBrowser):
         )
         self.add(new_player)
 
-    def ban_player(self, username: str):
+    def ban_player(self, username: str) -> tuple[bool, str]:
         query = select(Players).where(Players.username == username)
-        player = self.safe_select_one(query)
+        player: Players = self.safe_select_one(query)
         if not player:
-            return 'Игрок с таким именем не найден!'
+            return False, 'Игрок с таким именем не найден!'
         if not player.is_superuser and not player.is_admin:
             player.is_banned = True
             self.add(player)
@@ -39,24 +39,24 @@ class DbPlayerConfig(DbBrowser):
             with self.session as s:
                 for cat in s.exec(query).all():
                     DbCharacterConfig().edit_freeze_char_by_no(cat.no, True)
-            return f"Игрок {username} забанен успешно."
+            return True, f"Игрок {username} забанен успешно."
         else:
-            return "Не нужно пытаться банить админов!"
+            return False, "Не нужно пытаться банить админов!"
 
-    def unban_player(self, username: str):
+    def unban_player(self, username: str) -> tuple[bool, str]:
         query = select(Players).where(
             and_(Players.username == username, Players.is_banned == True)  #noqa: E712
         )
-        player = self.safe_select_one(query)
+        player: Players = self.safe_select_one(query)
         if not player:
-            return 'Забаненный игрок с таким именем не найден!'
+            return False, 'Забаненный игрок с таким именем не найден!'
         player.is_banned = False
         self.add(player)
         query = select(Characters).where(Characters.player_chat_id == player.chat_id)
         with self.session as s:
             for cat in s.exec(query).all():
                 DbCharacterConfig().edit_freeze_char_by_no(cat.no, False)
-        return f"Игрок {username} разбанен."
+        return True, f"Игрок {username} разбанен."
 
     def check_if_user_is_admin(self, chat_id) -> bool:
         query = select(Players).where(Players.chat_id == chat_id)
@@ -70,19 +70,23 @@ class DbPlayerConfig(DbBrowser):
         query = select(Players).where(Players.username == username)
         return self.safe_select_one(query)
 
-    def promote_or_demote(self, username: str, flag: bool):
+    def promote_or_demote(self, username: str, flag: bool) -> tuple[bool, str]:
         query = select(Players).where(Players.username == username, Players.is_banned == False)  #noqa: E712
-        player = self.safe_select_one(query)
+        player: Players = self.safe_select_one(query)
         if not player:
-            return 'Игрок с таким именем не найден!'
+            return False, 'Игрок с таким именем не найден!'
         player.is_admin = flag
         self.add(player)
-        return f'Игрок {username} {"повышен" if flag is True else "уволен"} успешно'
+        return True, f'Игрок {username} {"повышен" if flag is True else "уволен"} успешно'
 
-    def get_all_players(self):
+    def get_all_players(self) -> list[Players]:
         query = select(Players)
         return self.select_many(query)
     
     def get_player_by_id(self, chat_id: int) -> Players | None:
         query = select(Players).where(Players.chat_id == chat_id)
         return self.safe_select_one(query)
+
+    def get_all_banned(self) -> list[Players]:
+        query = select(Players).where(Players.is_banned == True)  #noqa: E712
+        return self.select_many(query)

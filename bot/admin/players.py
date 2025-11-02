@@ -12,12 +12,29 @@ class PlayerCommandHandler(CommandBase):
         self.player_db = DbPlayerConfig()
 
     async def ban(self):
-        reply = self.player_db.ban_player(self.text)
+        success, reply = self.player_db.ban_player(self.text)
         await self.context.bot.send_message(self.chat_id, reply)
+        if success:
+            player = self.player_db.get_player_by_username(self.text)
+            await self.bot.send_message(
+                player.chat_id,
+                "к сожалению, вы были внесены в черный список. "
+                "До разбана бот не будет реагировать на ваши команды, а все ваши персонажи будут заморожены. "
+                "Если вы считаете, что вас забанили несправедливо, свяжитесь с админинстрацией.",
+            )
 
     async def unban(self):
-        reply = self.player_db.unban_player(self.text)
+        success, reply = self.player_db.unban_player(self.text)
         await self.bot.send_message(self.chat_id, reply)
+        if success:
+            player = self.player_db.get_player_by_username(self.text)
+            await self.bot.send_message(
+                player.chat_id,
+                "Вы были убраны из черного списка."
+                "Бот готов отвечать на ваши команды, "
+                "а все ваши персонажи разморожены и находятся в том же состоянии, что и до бана. "
+                "Хорошей игры!",
+            )
 
     @superuser_command
     async def promote(self):
@@ -30,5 +47,10 @@ class PlayerCommandHandler(CommandBase):
         await self.bot.send_message(self.chat_id, reply)
 
     async def view_all_players(self):
-        players = DbPlayerConfig().get_all_players()
+        players = self.player_db.get_all_players()
         await self.view_list_from_db(players)
+    
+    async def view_ban_list(self):
+        players = self.player_db.get_all_banned()
+        await self.view_list_from_db(players, "Черный список пуст.")
+

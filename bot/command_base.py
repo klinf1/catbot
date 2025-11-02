@@ -24,8 +24,11 @@ class CommandBase:
     async def unknown_command(self):
         await self.context.bot.send_message(self.chat_id, "Неизвестная команда!")
 
-    async def view_list_from_db(self, db_res):
+    async def view_list_from_db(self, db_res, default: str = "Выборка пуста."):
         res = ""
+        if not db_res:
+            await self.bot.send_message(self.chat_id, default)
+            return
         for i in db_res:
             res = "\n".join([res, str(i), "______"])
         await self.context.bot.send_message(self.chat_id, res)
