@@ -1,4 +1,3 @@
-from sqlmodel import select
 from telegram import Update
 from telegram.ext import ContextTypes
 
@@ -7,7 +6,6 @@ from bot.herbs import HerbCommandHandler
 from bot.hunt import HuntCommandHandler
 from bot.inventory import InventoryCommandHandler
 from bot.pile import PileCommandHandler
-from db import Players
 from db.characters import DbCharacterUser
 from db.players import DbPlayerConfig
 from exceptions import BannedException, WrongChatError
@@ -38,9 +36,7 @@ class CommonCommandHandler(CommandBase):
         main_logger.debug(
             f"Common command manager starting with command: {self.command}"
         )
-        query = select(Players).where(Players.chat_id == self.user.id)
-        with self.player_db.session as s:
-            player = s.exec(query).first()
+        player = self.player_db.get_player_by_id(self.user.id)
         if not player:
             self.player_db.add_player(
                 self.user.id,

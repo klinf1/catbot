@@ -45,7 +45,7 @@ class DbPlayerConfig(DbBrowser):
 
     def unban_player(self, username: str):
         query = select(Players).where(
-            and_(Players.username == username, Players.is_banned == True)
+            and_(Players.username == username, Players.is_banned == True)  #noqa: E712
         )
         player = self.safe_select_one(query)
         if not player:
@@ -71,7 +71,7 @@ class DbPlayerConfig(DbBrowser):
         return self.safe_select_one(query)
 
     def promote_or_demote(self, username: str, flag: bool):
-        query = select(Players).where(Players.username == username, Players.is_banned == False)
+        query = select(Players).where(Players.username == username, Players.is_banned == False)  #noqa: E712
         player = self.safe_select_one(query)
         if not player:
             return 'Игрок с таким именем не найден!'
@@ -82,3 +82,7 @@ class DbPlayerConfig(DbBrowser):
     def get_all_players(self):
         query = select(Players)
         return self.select_many(query)
+    
+    def get_player_by_id(self, chat_id: int) -> Players | None:
+        query = select(Players).where(Players.chat_id == chat_id)
+        return self.safe_select_one(query)
