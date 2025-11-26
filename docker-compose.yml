@@ -1,0 +1,8 @@
+version: '3.13.5'
+
+services:
+  catbot:
+    image: klinf/catbot:latest
+    restart: always
+
+
