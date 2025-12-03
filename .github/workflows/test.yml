@@ -56,6 +56,7 @@ jobs:
           script: |
             sudo docker compose stop
             sudo docker compose rm catbot
+            sudo docker image prune -y
             sudo docker pull ${{ secrets.DOCKER_USER }}/catbot:latest
             sudo docker compose up -d 
 
