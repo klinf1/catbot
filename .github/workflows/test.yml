@@ -21,6 +21,7 @@ jobs:
       with:
         secrets: ${{ toJSON(secrets) }}
         file: .env
+        include: ADMIN*, TOKEN, TEST_MODE, GROUPS, DEV_ID, TOPIC
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     - name: Login to Docker 
