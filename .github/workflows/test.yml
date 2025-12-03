@@ -40,6 +40,11 @@ jobs:
     environment: test
     needs: build
     steps:
+      - name: Login to Docker 
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_LOGIN }}
+          password: ${{ secrets.DOCKERHUB_PASS }}
       - name: executing remote ssh commands to deploy
         uses: appleboy/ssh-action@master
         with:
@@ -50,7 +55,7 @@ jobs:
           script: |
             sudo docker compose stop
             sudo docker compose rm web
-            sudo docker pull ${{ secrets.DOCKER_USER }}/catbot:latest
+            sudo docker pull klinf/catbot:latest
             sudo docker compose up -d 
 
   send_message:
