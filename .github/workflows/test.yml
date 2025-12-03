@@ -57,7 +57,7 @@ jobs:
             sudo docker compose stop
             sudo docker compose rm catbot
             sudo docker pull ${{ secrets.DOCKER_USER }}/catbot:latest
-            sudo docker compose up
+            sudo docker compose up -d 
 
   send_message:
     runs-on: ubuntu-latest
