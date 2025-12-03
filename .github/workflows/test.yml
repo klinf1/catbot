@@ -8,10 +8,9 @@ on:
 
 
 jobs:
-  JOB-ID:
-    environment: test
+    
   build:
-
+    environment: test
     runs-on: ubuntu-latest
 
     steps:
@@ -36,8 +35,9 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKERHUB_LOGIN }}/catbot:latest
       
-  deploy:
+  deploy:    
     runs-on: ubuntu-latest
+    environment: test
     needs: build
     steps:
       - name: executing remote ssh commands to deploy
@@ -55,6 +55,7 @@ jobs:
 
   send_message:
     runs-on: ubuntu-latest
+    environment: test
     needs: deploy
     steps:
     - name: send message
