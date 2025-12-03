@@ -70,4 +70,4 @@ jobs:
       with:
         to: ${{ secrets.ADMIN_CHAT }}
         token: ${{ secrets.TOKEN }}
-        message: ${{ github.workflow }} успешно выполнен! 
+        message: Деплой на тест с коммитом ${{ github.event.head_commit.message }} успешно выполнен! 
