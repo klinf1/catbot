@@ -158,9 +158,18 @@ class SystemTextCommand:
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         self.update = update
         self.context = context
-        self.job_id: str = context.user_data["state"]["id"]
+    
+    @property
+    def job_id(self) -> str:
+        if not self.context.user_data.get("state"):
+            return None
+        if not self.context.user_data.get("state").get("id"):
+            return None
+        return self.context.user_data["state"]["id"]
     
     async def job_modify(self):
+        if not self.job_id:
+            return None
         job: Job = scheduler.get_job(self.job_id)
         params_list = self.update.message.text.strip().split(";")
         params = {}
