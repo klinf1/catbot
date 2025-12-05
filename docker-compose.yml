@@ -1,11 +1,11 @@
 services:
   catbot:
     image: klinf/catbot:latest
-    restart: no
+    restart: unless-stopped
     volumes:
-      - db:/data/catbot.db
+      - ./database:/data
 
 volumes:
-  db:
+  database:
 
 
