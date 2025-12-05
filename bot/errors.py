@@ -1,3 +1,5 @@
+import traceback
+
 from telegram.ext import ContextTypes
 
 from logs.logs import main_logger, user_logger
@@ -7,7 +9,7 @@ class ErrorHandler:
     def __init__(self, context: ContextTypes.DEFAULT_TYPE, dev_id: str) -> None:
         self.context = context
         self.dev_id: int = int(dev_id)
-        self.exc_dict: dict = context.chat_data.get("exc", {})  # type: ignore
+        self.exc_dict: dict = context.chat_data.get("exc", {}) if context.chat_data else {} # type: ignore
 
     @property
     def error_dict(self):
@@ -52,4 +54,4 @@ class ErrorHandler:
 
     async def unexpected_error(self):
         main_logger.exception(self.context.error)
-        await self.context.bot.send_message(self.dev_id, str(self.context.error))
+        await self.context.bot.send_message(self.dev_id, traceback.format_exc())
