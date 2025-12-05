@@ -2,8 +2,6 @@ services:
   catbot:
     image: klinf/catbot:latest
     restart: unless-stopped
-    env_file:
-      - .env
     volumes:
       - db:/etc/catbot/data
 
