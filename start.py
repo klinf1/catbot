@@ -1,5 +1,4 @@
 import os
-import sys
 
 from dotenv import load_dotenv
 
@@ -22,7 +21,7 @@ def main():
     except Exception as e:
         logger.error(f"Error creating tables: {e}")
         logger.error(os.getenv("DB_PATH"))
-        raise
+        raise Exception(os.getenv("DB_PATH")) from e
     print("Tables created!")
     create_schedules()
     print("Jobs scheduled!")
