@@ -1,8 +1,10 @@
 from __future__ import annotations
+import os
 
 from datetime import datetime
 from typing import Any, ClassVar
 
+from dotenv import load_dotenv
 from pydantic import computed_field, field_validator
 from sqlalchemy.ext.asyncio.engine import create_async_engine
 from sqlmodel import (CheckConstraint, Column, Field, Integer,
@@ -13,8 +15,10 @@ from sqlmodel.sql.expression import SelectOfScalar
 from db.table_data import AGES, CLANS, SEASONS, SETTINGS
 from logs.logs import main_logger as logger
 
-engine = create_engine("sqlite:///cats.db")
-as_engine = create_async_engine("sqlite+aiosqlite:///cats.db")
+load_dotenv()
+
+engine = create_engine(f"sqlite:///{os.getenv('DB_PATH', 'cats.db')}")
+as_engine = create_async_engine(f"sqlite+aiosqlite:///{os.getenv('DB_PATH', 'cats.db')}")
 
 
 class Buffs(SQLModel, table=True):
