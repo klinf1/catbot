@@ -19,8 +19,6 @@ def main():
     try:
         create_tables()
     except Exception as e:
-        logger.error(f"Error creating tables: {e}")
-        logger.error(os.getenv("DB_PATH"))
         raise Exception(os.getenv("DB_PATH")) from e
     print("Tables created!")
     create_schedules()

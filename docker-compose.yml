@@ -1,9 +1,9 @@
 services:
   catbot:
     image: klinf/catbot:latest
-    restart: unless-stopped
+    restart: no
     volumes:
-      - db:/etc/catbot/data/catbot.db
+      - db:/data/catbot.db
 
 volumes:
   db:
