@@ -1,4 +1,5 @@
 import os
+import sys
 
 from dotenv import load_dotenv
 
@@ -16,7 +17,12 @@ def main():
     token = os.getenv("TOKEN")
     admin_ids = os.getenv("ADMINS", "").split(",")
     admin_names = os.getenv("ADMIN_NAMES", "").split(",")
-    create_tables()
+    try:
+        create_tables()
+    except Exception as e:
+        logger.error(f"Error creating tables: {e}")
+        logger.error(os.getenv("DB_PATH"))
+        sys.exit(1)
     print("Tables created!")
     create_schedules()
     print("Jobs scheduled!")
