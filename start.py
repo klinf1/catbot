@@ -22,7 +22,7 @@ def main():
     except Exception as e:
         logger.error(f"Error creating tables: {e}")
         logger.error(os.getenv("DB_PATH"))
-        sys.exit(1)
+        raise
     print("Tables created!")
     create_schedules()
     print("Jobs scheduled!")
