@@ -13,6 +13,7 @@ from sqlmodel import (CheckConstraint, Column, Field, Integer,
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel.sql.expression import SelectOfScalar
 from db.table_data import AGES, CLANS, SEASONS, SETTINGS
+from db.utils import PreyStats
 from logs.logs import main_logger as logger
 
 load_dotenv()
@@ -100,10 +101,26 @@ class Players(SQLModel, table=True):
     first_name: str | None = None
     last_name: str | None = None
 
+    @property
+    def characters(self) -> list[Characters]:
+        query = select(Characters).where(Characters.player_chat_id == self.chat_id)
+        with Session(engine) as s:
+            chars = s.exec(query).all()
+        return chars
+
     def __str__(self) -> str:
-        return (
-            f"Id: {self.no}\nИгрок: {self.chat_id}\nUsername: {self.username}\nFirst name: {self.first_name}\nLast name: {self.last_name}"
-            f"\nЗабанен: {'Да' if self.is_banned else 'Нет'}\nАдмин: {'Да' if self.is_admin else 'Нет'}\nСуперюзер: {'Да' if self.is_superuser else 'Нет'}"
+        return "\n".join(
+            [
+                f"Id: {self.no}",
+                f"Игрок: {self.chat_id}",
+                f"Username: {self.username}",
+                f"First name: {self.first_name}",
+                f"Last name: {self.last_name}",
+                f"Забанен: {'Да' if self.is_banned else 'Нет'}",
+                f"Админ: {'Да' if self.is_admin else 'Нет'}",
+                f"Суперюзер: {'Да' if self.is_superuser else 'Нет'}",
+                f"Персонажи: {', '.join([char.name for char in self.characters]) if self.characters else 'Отсутствуют'}",
+            ]
         )
 
 
@@ -126,7 +143,7 @@ class Seasons(SQLModel, table=True):
 
     @staticmethod
     def attrs():
-        return ['name', 'hunt_mod', 'herb_mod', 'next']
+        return ["name", "hunt_mod", "herb_mod", "next"]
     
     def __str__(self):
         return "\n".join(
@@ -155,7 +172,7 @@ class Clans(SQLModel, table=True):
 
     @staticmethod
     def attrs():
-        return [ "is_true_clan"]
+        return ["is_true_clan"]
     
     def prey_pile(self):
         res = 0
@@ -431,10 +448,10 @@ class Characters(SQLModel, table=True):
     name: str = Field(index=True)
     player_chat_id: int = Field(foreign_key="players.chat_id", ondelete="CASCADE")
     hunting: int = Field(default=0, sa_column=Column(Integer, default=0))
-    agility: int = Field(default=0, sa_column=Column(Integer, default=0))  # Agility
-    hearing: int = Field(default=0, sa_column=Column(Integer, default=0))  # Hearing
-    smell: int = Field(default=0, sa_column=Column(Integer, default=0))  # Smell
-    sight: int = Field(default=0, sa_column=Column(Integer, default=0))  # Sight
+    agility: int = Field(default=0, sa_column=Column(Integer, default=0))
+    hearing: int = Field(default=0, sa_column=Column(Integer, default=0))
+    smell: int = Field(default=0, sa_column=Column(Integer, default=0))
+    sight: int = Field(default=0, sa_column=Column(Integer, default=0))
     speed: int = Field(default=0, sa_column=Column(Integer, default=0))
     stamina: int = Field(default=0, sa_column=Column(Integer, default=0))
     strength: int = Field(default=0, sa_column=Column(Integer, default=0))
@@ -627,9 +644,18 @@ class Characters(SQLModel, table=True):
             role = "нет"
         else:
             role = self.role_whole.name
-        return (
-            f"Id: {self.no}\nИмя: {self.name}\nВозраст: {self.age} лун\nАктуальные характеристики:\n{'\n'.join([f'{key}: {value}' for key, value in self.actual_stats.items()])}"
-            f"\nКлан: {clan}\nРоль: {role}\nСтепень голода: {self.hunger}\nЗаморожен: {'да' if self.is_frozen else 'нет'}"
+        return "\n".join(
+            [
+                f"Id: {self.no}",
+                f"Имя: {self.name}",
+                f"Возраст: {self.age} лун",
+                "Актуальные характеристики:",
+                *[f"{key}: {value}\n" for key, value in self.actual_stats.items()],
+                f"Клан: {clan}",
+                f"Роль: {role}",
+                f"Степень голода: {self.hunger}",
+                f"Заморожен: {'да' if self.is_frozen else 'нет'}",
+            ]
         )
 
 
@@ -642,7 +668,7 @@ class PreyTerritory(SQLModel, table=True):
 class Prey(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
     name: str = Field(index=True)
-    stat: str
+    stat: PreyStats
     amount: int
     rarity: int = Field(sa_column=Column(Integer, nullable=False))
     sum_required: int = Field(sa_column=Column(Integer, nullable=False))
@@ -693,11 +719,18 @@ class Prey(SQLModel, table=True):
             inj = self.injury_whole.name
         else:
             inj = "нет"
-        return (
-            f"Id: {self.no}\nНазвание: {self.name}\nНавык: {self.stat}\nПитательность: {self.amount}\nРедкость: {self.rarity}"
-            f"\n\nНеобходимая сумма очков: {self.sum_required}\n"
-            f"Территория проживания: {clan_name}\nНаносимое ранение: {inj}\nШанс ранения: {self.injury_chance or 'нет'}"
-        )
+        return "\n".join(
+            [
+                f"Id: {self.no}",
+                f"Название: {self.name}",
+                f"Навык: {self.stat}",
+                f"Питательность: {self.amount}",
+                f"Редкость: {self.rarity}",
+                f"Необходимая сумма очков: {self.sum_required}",
+                f"Территория проживания: {clan_name}",
+                f"Наносимое ранение: {inj}",
+                f"Шанс ранения: {self.injury_chance or 'нет'}",
+            ])
 
 
 class PreyPile(SQLModel, table=True):
