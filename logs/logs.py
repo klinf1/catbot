@@ -16,7 +16,7 @@ def set_up_logger(logger_name, file_name):
     return logger
 
 
-main_logger = set_up_logger("main", "main.log")
-user_logger = set_up_logger("user_exc", "user_exc.log")
-schedule_logger = set_up_logger("schedule_logger", "schedule.log")
-system_logger = set_up_logger("system_logger", "system.log")
+main_logger = set_up_logger("main", "logs/files/main.log")
+user_logger = set_up_logger("user_exc", "logs/files/user_exc.log")
+schedule_logger = set_up_logger("schedule_logger", "logs/files/schedule.log")
+system_logger = set_up_logger("system_logger", "logs/files/system.log")

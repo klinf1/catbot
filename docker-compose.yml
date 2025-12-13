@@ -4,8 +4,10 @@ services:
     restart: unless-stopped
     volumes:
       - ./database:/data
+      - ./logs:/logs/files
 
 volumes:
   database:
+  logs:
 
 
