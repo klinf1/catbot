@@ -16,8 +16,9 @@ class StatsEnum(StrEnum):
     FAITH = "faith"
 
 class PreyStats(StrEnum):
-    SPEED = "speed"
-    STAMINA = "stamina"
-    SIGHT = "sight"
-    HEARING = "hearing"
-    SMELL = "smell"
+    speed = "speed"
+    stamina = "stamina"
+    sight = "sight"
+    hearing = "hearing"
+    smell = "smell"
+    agility = "agility"
