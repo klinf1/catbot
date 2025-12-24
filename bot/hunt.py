@@ -36,17 +36,18 @@ class HuntCommandHandler(CommandBase):
             main_logger.info(f"Охота с замороженным персонажем: {self.user.username}")
         except NoItemFoundDbError as err:
             await self.bot.send_message(
-                self.chat_id, str(err), reply_to_message_id=self.update.message.id
+                self.chat_id,
+                str(err),
             )
             main_logger.info(f"Ошибка поиска в БД {err} {traceback.format_exc()}")
         except TooMuchHuntingError:
             await self.bot.send_message(self.chat_id, "Этот персонаж уже достаочно поохотился в этом сезоне!")
         except Exception as err:
-            main_logger.error(err)
+            main_logger.error(f"{err} {traceback.format_exc()}")
         else:
             if success and prey:
                 await self.context.bot.send_message(
-                    self.chat_id, f"Охота на {prey.name} успешна!"
+                    self.chat_id, f"Охота {params[0]} на {prey.name} успешна!", reply_to_message_id=self.topic_id,
                 )
                 self.context.user_data.update(
                     {
@@ -55,26 +56,27 @@ class HuntCommandHandler(CommandBase):
                             "args": {"prey": prey, "cat": params[0]},
                         }
                     }
-                )  # type: ignore
+                )
                 await self.context.bot.send_message(
                     self.chat_id,
                     text=f"Охота успешна! Добыча: {prey.name}\n"
                     "Что вы хотите сделать с добычей?",
                     reply_markup=get_hunt_keyboard(),
-                    reply_to_message_id=self.topic_id,
                 )
             elif not prey:
                 await self.bot.send_message(
                     self.chat_id,
                     "Вы не нашли никакой дичи.",
-                    reply_to_message_id=self.topic_id,
+                )
+                await self.context.bot.send_message(
+                    self.chat_id, f"{params[0]} не нашел дичи на охоте!", reply_to_message_id=self.topic_id
                 )
             else:
                 await self.context.bot.send_message(
                     self.chat_id, f"Охота на {prey.name} провалилась!!"
                 )
                 await self.context.bot.send_message(
-                    self.chat_id, f"Охота на {prey.name} провалилась!", reply_to_message_id=self.topic_id
+                    self.chat_id, f"Охота {params[0]} на {prey.name} провалилась!", reply_to_message_id=self.topic_id
                 )
 
     async def hunt_help(self):
