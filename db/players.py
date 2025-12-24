@@ -72,14 +72,14 @@ class DbPlayerConfig(DbBrowser):
         query = select(Players).where(Players.username == username)
         return self.safe_select_one(query)
 
-    def promote_or_demote(self, username: str, flag: bool) -> tuple[bool, str]:
+    def promote_or_demote(self, username: str, flag: bool) -> str:
         query = select(Players).where(Players.username == username, Players.is_banned == False)  #noqa: E712
         player: Players = self.safe_select_one(query)
         if not player:
-            return False, 'Игрок с таким именем не найден!'
+            return 'Игрок с таким именем не найден!'
         player.is_admin = flag
         self.add(player)
-        return True, f'Игрок {username} {"повышен" if flag is True else "уволен"} успешно'
+        return f'Игрок {username} {"повышен" if flag is True else "уволен"} успешно'
 
     def get_all_players(self) -> list[Players]:
         query = select(Players)
