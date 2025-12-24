@@ -47,7 +47,7 @@ class Hunt(DbBrowser):
             raise CharacterFrozenException
         if self.char.is_dead:
             raise CharacterDeadException
-        if self.char.curr_hunts >= self.settings.get("hunt_attempts"):
+        if self.char.curr_hunts >= int(self.settings.get("hunt_attempts")):
             raise TooMuchHuntingError
 
     def get_prey(self) -> Prey | None:
