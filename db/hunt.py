@@ -69,8 +69,8 @@ class Hunt(DbBrowser):
                 )
             )
         )
-        logger.debug(f"Запрос для поиска дичи {query}")
         poss_prey = self.select_many(query)
+        logger.debug(f"Список возможной дичи {poss_prey}")
         try:
             prey = choice(poss_prey)
             logger.debug(f"Дичь для охоты: {str(prey)}")
