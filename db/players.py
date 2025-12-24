@@ -92,3 +92,12 @@ class DbPlayerConfig(DbBrowser):
     def get_all_banned(self) -> list[Players]:
         query = select(Players).where(Players.is_banned == True)  #noqa: E712
         return self.select_many(query)
+    
+    def update_username(self, old: str | Players, new: str) -> str:
+        if isinstance(old, str):
+            old = self.get_player_by_username(old)
+            if old is None:
+                return "Игрок с таким username не найден."
+        old.username = new
+        self.add(old)
+        return "Юзернейм обновлен успешно."

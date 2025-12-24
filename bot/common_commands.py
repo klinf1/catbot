@@ -49,6 +49,8 @@ class CommonCommandHandler(CommandBase):
                 f"Игрок {self.user.id} {self.user.username} зарегистрирован"
             )
         else:
+            if self.user.username != player.username and self.user.username is not None:
+                self.player_db.update_username(player, self.user.username)
             if player.is_banned and self.command != "health":
                 raise BannedException("banned af")
         if (
