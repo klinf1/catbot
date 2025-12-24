@@ -20,6 +20,7 @@ class CommonCommandHandler(CommandBase):
         "commands",
         "hunt_help",
         "start",
+        "inventory",
     ]
     char_404_msg = "Персонаж с таким именем не найден или не принадлежит Вам."
 
