@@ -1,3 +1,4 @@
+from datetime import datetime
 from random import choice, randint
 from sqlite3 import IntegrityError
 
@@ -31,7 +32,7 @@ class Hunt(DbBrowser):
     def hunt(self) -> tuple[Prey | None, bool]:
         self.validate_char()
         res = self.check_success()
-        self.char_config.edit_character(self.char.name, {"curr_hunts": self.char.curr_hunts+1})
+        self.char_config.edit_character(self.char.name, {"curr_hunts": self.char.curr_hunts+1}, f"hunt at {datetime.now()}")
         if res is False:
             # self.apply_consequences()
             pass
