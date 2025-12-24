@@ -11,8 +11,10 @@ def set_up_logger(logger_name, file_name):
     formatter = logging.Formatter(
         "%(asctime)s - %(levelname)s - %(pathname)s - %(lineno)s - %(funcName)s - %(message)s"
     )
+    out_handler = logging.StreamHandler()
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+    logger.addHandler(out_handler)
     return logger
 
 
