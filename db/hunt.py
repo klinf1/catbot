@@ -38,7 +38,7 @@ class Hunt(DbBrowser):
         return self.prey, res
     
     def get_settings(self) -> dict:
-        query = select(Settings).where(Settings.area == "hunt")
+        query = select(Settings).where(Settings.name == "hunt_attempts")  # TODO: добавить сюда like %hunt%
         settings: list[Settings] = self.select_many(query)
         return {"hunt_attempts": i.value for i in settings if i.name == "hunt_attempts" or 0}
 
@@ -73,9 +73,10 @@ class Hunt(DbBrowser):
         poss_prey = self.select_many(query)
         try:
             prey = choice(poss_prey)
+            logger.debug(f"Дичь для охоты: {str(prey)}")
         except IndexError:
             prey = None
-        logger.debug(f"Дичь для охоты: {str(prey)}")
+            logger.debug("Дичь не найдена!")
         return prey
 
     def get_char(self) -> Characters:
