@@ -10,6 +10,7 @@ from db.eat import Eater
 from db.inventory import InventoryManager
 from db.pile import PreyPileConfig
 from db.prey import DbPreyConfig
+from logs.logs import main_logger as logger
 
 
 class HuntConversation(CallbackBase):
@@ -48,6 +49,9 @@ class InvBaseConv(CallbackBase):
         char = self.char_db.get_char_by_name(
             self.context.user_data["state"]["args"]["cat"]
         )
+        if not char:
+            logger.error("Character not found in InvBaseConv")
+            return
         match self.query_data:
             case "view_inv":
                 if not self.inventory_db.get_char_inventory(char.no):

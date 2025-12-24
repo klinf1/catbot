@@ -38,7 +38,7 @@ class InventoryCommandHandler(CommandBase):
                 {
                     "state": {
                         "name": "inv_base",
-                        "args": {"cat": self.text},
+                        "args": {"cat": self.text.capitalize()},
                     }
                 }
             )
