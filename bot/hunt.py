@@ -79,8 +79,7 @@ class HuntCommandHandler(CommandBase):
 
     async def hunt_help(self):
         text = (
-            "Это команда для охоты! Необходимо указать имя кота и территорию, на которой он охотится через перенос строки. "
-            "Если кот охотится на ничейной территории, то только имя кота."
+            "Это команда для охоты! Необходимо указать имя кота и территорию, на которой он охотится через перенос строки."
         )
         await self.context.bot.send_message(
             self.chat_id, text, reply_to_message_id=self.update.message.id
