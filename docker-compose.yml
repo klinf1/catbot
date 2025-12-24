@@ -5,6 +5,8 @@ services:
     volumes:
       - ./database:/data
       - ./logs:/logs/files
+    environment:
+     - PYTHONUNBUFFERED=1
 
 volumes:
   database:
