@@ -2,7 +2,8 @@ from datetime import datetime
 from random import choice, randint
 from sqlite3 import IntegrityError
 
-from sqlmodel import Session, and_, select
+from sqlalchemy import Exists
+from sqlmodel import Session, and_, select, or_, exists
 
 from db import Characters, Clans, DbBrowser, Prey, PreyTerritory, Seasons, Settings
 from db.characters import DbCharacterConfig
@@ -62,11 +63,17 @@ class Hunt(DbBrowser):
             mod = season.hunt_mod
         query = (
             select(Prey)
-            .join(PreyTerritory)
+            .join(PreyTerritory, isouter=True)
             .where(
                 and_(
                     Prey.rarity + mod >= res,
-                    PreyTerritory.territory == self.clan.no,
+                    or_(
+                        PreyTerritory.territory == self.clan.no,
+                        select(PreyTerritory).join(Prey)
+                        .where(PreyTerritory.prey == Prey.no)
+                        .exists()
+                        == False,  # noqa: E712
+                    ),  # noqa: E711
                 )
             )
         )
