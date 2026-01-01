@@ -1,5 +1,3 @@
-import traceback
-
 from telegram.ext import ContextTypes
 
 from logs.logs import main_logger, user_logger
@@ -54,4 +52,4 @@ class ErrorHandler:
 
     async def unexpected_error(self):
         main_logger.exception(self.context.error)
-        await self.context.bot.send_message(self.dev_id, traceback.format_exc())
+        await self.context.bot.send_message(self.dev_id, self.context.error)
