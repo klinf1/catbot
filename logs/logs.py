@@ -1,5 +1,10 @@
+import os
+
+from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
+
+load_dotenv()
 
 
 def set_up_logger(logger_name, file_name):
@@ -19,7 +24,10 @@ def set_up_logger(logger_name, file_name):
     return logger
 
 
-main_logger = set_up_logger("main", "logs/files/main.log")
-user_logger = set_up_logger("user_exc", "logs/files/user_exc.log")
-schedule_logger = set_up_logger("schedule_logger", "logs/files/schedule.log")
-system_logger = set_up_logger("system_logger", "logs/files/system.log")
+path = os.environ['LOG_PATH']
+
+
+main_logger = set_up_logger("main", f"{path}main.log")
+user_logger = set_up_logger("user_exc", f"{path}user_exc.log")
+schedule_logger = set_up_logger("schedule_logger", f"{path}schedule.log")
+system_logger = set_up_logger("system_logger", f"{path}system.log")

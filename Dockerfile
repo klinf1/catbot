@@ -20,6 +20,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 ENV PATH="/app/.venv/bin:$PATH"
 
+RUN mkdir /app/files
+
 ENTRYPOINT []
 
 CMD ["uv", "run", "start.py"]
