@@ -890,6 +890,13 @@ class DbBrowser:
                         is_superuser=True,
                     )
                     self.add(admin)
+    
+    def get_setting(self, name: str) -> dict[str, str]:
+        query = select(Settings).where(Settings.name == name)
+        res = self.safe_select_one(query)
+        if not res:
+            raise Exception(f"Настройка с наименованием {name} отсутствует!")
+        return {name: res.value}        
 
 
 def create_tables() -> None:

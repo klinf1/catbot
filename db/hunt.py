@@ -4,7 +4,7 @@ from sqlite3 import IntegrityError
 
 from sqlmodel import Session, and_, select, or_
 
-from db import Characters, Clans, DbBrowser, Prey, PreyTerritory, Seasons, Settings
+from db import Characters, Clans, DbBrowser, Prey, PreyTerritory, Seasons
 from db.characters import DbCharacterConfig
 from db.injuries import DbInjuryCharacter
 from exceptions import (CharacterDeadException, CharacterFrozenException,
@@ -26,9 +26,9 @@ class Hunt(DbBrowser):
         self.char = self.get_char()
         self.clan = self.get_clan()
         self.prey = self.get_prey()
-        self.settings = self.get_settings()
+        self.settings = self.get_setting("hunt_attempts")
         self.char_config = DbCharacterConfig()
-
+    
     def hunt(self) -> tuple[Prey | None, bool]:
         self.validate_char()
         res = self.check_success()
@@ -38,11 +38,6 @@ class Hunt(DbBrowser):
             pass
         return self.prey, res
     
-    def get_settings(self) -> dict:
-        query = select(Settings).where(Settings.name == "hunt_attempts")  # TODO: добавить сюда like %hunt%
-        settings: list[Settings] = self.select_many(query)
-        return {"hunt_attempts": i.value for i in settings if i.name == "hunt_attempts" or 0}
-
     def validate_char(self):
         if self.char.is_frozen:
             raise CharacterFrozenException
