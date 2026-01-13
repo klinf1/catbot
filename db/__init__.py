@@ -524,9 +524,8 @@ class Characters(SQLModel, table=True):
 
     @computed_field
     @property
-    def actual_stats(self) -> dict[str, int]:
-        logger.debug(f"Получены актуальные характеристики для {self.name}")
-        return {
+    def actual_stats(self) -> dict[str, int]:        
+        stats =  {
             "hunting": self.get_actual_stat("hunting"),
             "agility": self.get_actual_stat("agility"),
             "hearing": self.get_actual_stat("hearing"),
@@ -540,6 +539,8 @@ class Characters(SQLModel, table=True):
             "healing": self.get_actual_stat("healing"),
             "faith": self.get_actual_stat("faith"),
         }
+        logger.debug(f"Получены актуальные характеристики для {self.name}")
+        return stats
     
     @staticmethod
     def _get_hunger_pen() -> dict[int, int]:
@@ -650,7 +651,7 @@ class Characters(SQLModel, table=True):
                 f"Имя: {self.name}",
                 f"Возраст: {self.age} лун",
                 "Актуальные характеристики:",
-                *[f"{key}: {value}\n" for key, value in self.actual_stats.items()],
+                *[f"{key}: {value}" for key, value in self.actual_stats.items()],
                 f"Клан: {clan}",
                 f"Роль: {role}",
                 f"Степень голода: {self.hunger}",
