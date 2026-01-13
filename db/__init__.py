@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 
 from datetime import datetime
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Iterable
 
 from dotenv import load_dotenv
 from pydantic import computed_field, field_validator
@@ -802,6 +802,20 @@ class DbBrowser:
             s.add(table)
             self.commit()
     
+    def add_many(self, val: Iterable[SQLModel]):
+        with self.session as s:
+            for i in val:
+                assert isinstance(i, SQLModel)            
+                s.add(i)
+            s.commit()
+    
+    def delete_many(self, val: Iterable[SQLModel]) -> None:
+        with self.session as s:
+            for i in val:
+                assert isinstance(i, SQLModel)    
+                s.delete(i)
+            s.commit()
+    
     async def as_add(self, table: type[SQLModel]):
         async with self.async_session as s:
             s.add(table)
@@ -812,16 +826,16 @@ class DbBrowser:
             s.delete(table)
             self.commit()
     
-    async def as_delete(self, table: type[SQLModel]):
+    async def as_delete(self, table: SQLModel):
         async with self.async_session as s:
             s.delete(table)
             await s.commit()
 
-    def select_one(self, query: SelectOfScalar) -> type[SQLModel]:
+    def select_one(self, query: SelectOfScalar) -> SQLModel:
         with self.session as s:
             return s.exec(query).one()
     
-    async def as_select_one(self, query: SelectOfScalar) -> type[SQLModel]:
+    async def as_select_one(self, query: SelectOfScalar) -> SQLModel:
         async with self.async_session as s:
             res = await s.exec(query)
             return res.one()
@@ -835,11 +849,11 @@ class DbBrowser:
             res = await s.exec(query)
             return res.all()
 
-    def safe_select_one(self, query: SelectOfScalar) -> type[SQLModel] | None:
+    def safe_select_one(self, query: SelectOfScalar) -> SQLModel | None:
         with self.session as s:
             return s.exec(query).first()
     
-    async def as_safe_select_one(self, query: SelectOfScalar) -> type[SQLModel] | None:
+    async def as_safe_select_one(self, query: SelectOfScalar) -> SQLModel | None:
         async with self.async_session as s:
             res = await s.exec(query)
             return res.first()
