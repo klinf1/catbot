@@ -1,4 +1,5 @@
 import os
+import time
 
 from dotenv import load_dotenv
 
@@ -13,6 +14,9 @@ load_dotenv()
 
 
 def main():
+    if hasattr(time, 'tzset'):
+        os.environ['TZ'] = 'Europe/Kirov'
+        time.tzset()
     token = os.getenv("TOKEN")
     admin_ids = os.getenv("ADMINS", "").split(",")
     admin_names = os.getenv("ADMIN_NAMES", "").split(",")
