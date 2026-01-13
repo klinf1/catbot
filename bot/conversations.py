@@ -60,23 +60,25 @@ class InvBaseConv(CallbackBase):
             case "view_inv":
                 if not self.inventory_db.get_char_inventory(char.no):
                     await self.bot.send_message(self.chat_id, f"Инвентарь персонажа {char.name} пуст")
-                    return
-                self.context.user_data.update(
-                    {
-                        "state": {
-                            "name": "inv_view",
-                            "args": {"cat": char},
+                    del self.context.user_data["state"]
+                else:
+                    self.context.user_data.update(
+                        {
+                            "state": {
+                                "name": "inv_view",
+                                "args": {"cat": char},
+                            }
                         }
-                    }
-                )
-                await self.bot.send_message(
-                    self.chat_id,
-                    f"Инвентарь персонажа {char.name}",
-                    reply_markup=get_view_inv_keyboard(char.no),
-                )
+                    )
+                    await self.bot.send_message(
+                        self.chat_id,
+                        f"Инвентарь персонажа {char.name}",
+                        reply_markup=get_view_inv_keyboard(char.no),
+                    )
             case "clear_inv":
                 self.inventory_db.clear_inventory(char.no)
                 await self.bot.send_message(self.chat_id, "Инвентарь очищен!")
+                del self.context.user_data["state"]        
 
 
 class InvViewConv(CallbackBase):
