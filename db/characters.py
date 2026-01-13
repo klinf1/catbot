@@ -16,15 +16,13 @@ class DbCharacterUser(DbBrowser):
 
     def get_all_own_chars(self):
         query = select(Characters).where(Characters.player_chat_id == self.chat_id)
-        with self.session as s:
-            return s.exec(query).all()
+        return self.select_many(query)
 
     def get_one_own_char(self, name: str):
         query = select(Characters).where(
             and_(Characters.player_chat_id == self.chat_id, Characters.name == name)
         )
-        with self.session as s:
-            return s.exec(query).first()
+        return self.safe_select_one(query)
 
 
 class DbCharacterConfig(DbBrowser):
@@ -36,19 +34,15 @@ class DbCharacterConfig(DbBrowser):
 
     def get_char_by_name(self, name: str):
         query = select(Characters).where(Characters.name == name)
-        with self.session as s:
-            return s.exec(query).first()
+        return self.safe_select_one(query)
 
     def get_char_by_no(self, no: int):
         query = select(Characters).where(Characters.no == no)
-        with self.session as s:
-            return s.exec(query).first()
+        return self.safe_select_one(query)
 
     def get_chars_for_player(self, chat_id: int):
         query = select(Characters).where(Characters.player_chat_id == chat_id)
-        with self.session as s:
-            cats = s.exec(query).all()
-        return cats
+        return self.select_many(query)
 
     def add_character(self, params: dict):
         try:
@@ -99,15 +93,12 @@ class DbCharacterConfig(DbBrowser):
 
     def check_if_char_belongs_to_clan(self, char_no: int, clan: int) -> bool:
         query = select(Characters).where(Characters.no == char_no)
-        with self.session as s:
-            char = s.exec(query).one()
+        char = self.select_one(query)
         return True if char.clan_no == clan else False
 
     def get_all_chars(self):
         query = select(Characters)
-        with self.session as s:
-            chars = s.exec(query).all()
-        return chars
+        return self.select_many(query)
 
     @staticmethod
     def _edit_single_stat(char: Characters, stat: str, value: Any):
