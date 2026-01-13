@@ -41,3 +41,7 @@ class NotRealClanError(Exception):
 
 class TooMuchHuntingError(Exception):
     pass
+
+
+class CharNotFound(Exception):
+    pass

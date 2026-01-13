@@ -7,7 +7,7 @@ from db import Characters
 from db.characters import DbCharacterConfig
 from db.decorators import superuser_command
 from db.players import DbPlayerConfig
-from exceptions import NotRealClanError
+from exceptions import CharNotFound, NotRealClanError
 from logs.logs import main_logger
 from utils import prepare_for_db
 
@@ -159,3 +159,11 @@ class CharacterCommandHandler(CommandBase):
             f"Персонаж {name} воскрешен.",
             reply_to_message_id=self.update.message.id,
         )
+    
+    async def view_char_hist(self):
+        name = self.text.capitalize().strip()
+        try:
+            hist = self.char_config.get_char_history(name)
+            await self.view_list_from_db(hist)
+        except CharNotFound:
+            await self.bot.send_message(self.chat_id, f"Персонаж с именем {name} не найден.")

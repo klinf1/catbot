@@ -789,6 +789,24 @@ class CharacterHistory(SQLModel, table=True):
     new: str
     reason: str | None = None
 
+    def __str__(self):
+        char_q = select(Characters).where(Characters.no == self.char_no)
+        with Session(engine) as s:
+            char = s.exec(char_q).first()
+        if char is None:
+            return ""
+        return "\n".join(
+            [
+                f"Персонаж: {char.name}",
+                f"Админ: {self.user}",
+                f"Время внесения изменений: {self.time}",
+                f"Параметр: {self.field}",
+                f"Старое значение: {self.old}",
+                f"Новое значение: {self.new}",
+                f"Указанная причина изменения: {self.reason}"
+            ]
+        )
+
 
 class DbBrowser:
     def __init__(self) -> None:

@@ -2,9 +2,9 @@ from typing import Any
 
 from sqlmodel import Session, and_, select
 
-from db import Characters, DbBrowser
+from db import Characters, CharacterHistory, DbBrowser
 from db.clans import DbClanConfig
-from exceptions import NotRealClanError
+from exceptions import CharNotFound, NotRealClanError
 
 
 class DbCharacterUser(DbBrowser):
@@ -114,3 +114,14 @@ class DbCharacterConfig(DbBrowser):
                     raise NotRealClanError
         setattr(char, stat, value)
         return char
+    
+    def get_char_history(self, name: str) -> list[CharacterHistory]:
+        char: Characters = self.get_char_by_name(name)
+        if not char:
+            raise CharNotFound
+        query = select(CharacterHistory).where(CharacterHistory.char_no == char.no)
+        return self.select_many(query)
+    
+    def get_admin_history(self, admin: str) -> list[CharacterHistory]:
+        query = select(CharacterHistory).where(CharacterHistory.user == admin)
+        return self.select_many(query)
