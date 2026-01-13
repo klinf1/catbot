@@ -21,7 +21,7 @@ class Hunt(DbBrowser):
 
     def __init__(self, char_name: str, territory: str) -> None:
         super().__init__()
-        self.territory = territory.strip().capitalize()
+        self.territory = territory
         self.char_name = char_name.strip().capitalize()
         self.char = self.get_char()
         self.clan = self.get_clan()
@@ -97,7 +97,7 @@ class Hunt(DbBrowser):
 
     def get_clan(self) -> Clans:
         logger.debug(f"Getting cat territory for {self.territory}")
-        query = select(Clans).where(Clans.name == self.territory)
+        query = select(Clans).where(Clans.no == self.territory)
         res = self.safe_select_one(query)
         if not res:
             raise NoItemFoundDbError(f"Клан {self.territory} не найден.")

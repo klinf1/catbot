@@ -4,7 +4,7 @@ from telegram.ext import ContextTypes
 from bot.admin.admin_commands import AdminCommandHandler
 from bot.admin.system import SystemConv, SystemTextCommand
 from bot.common_commands import CommonCommandHandler
-from bot.conversations import HuntConversation, InvBaseConv, InvViewConv, PreyViewConv, PileConv
+from bot.conversations import HuntConversation, InvBaseConv, InvViewConv, PreyViewConv, PileConv, HuntTerrChoice
 from exceptions import WrongChatError
 from logs.logs import main_logger as logger
 
@@ -50,6 +50,7 @@ class CallbackRouter:
         self.prey_view = PreyViewConv(update, context)
         self.settings = SystemConv(update, context)
         self.pile_conv = PileConv(update, context)
+        self.pre_hunt_conv = HuntTerrChoice(update, context)
 
     async def route(self):
         if state := self.context.user_data.get("state", {}):
@@ -76,3 +77,6 @@ class CallbackRouter:
                 case "pile_prey":
                     async with self.pile_conv as conv:
                         await conv.pile_prey()
+                case "hunt_started":
+                    async with self.pre_hunt_conv as conv:
+                        await conv.hunt()

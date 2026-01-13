@@ -12,11 +12,11 @@ class DbClanConfig(DbBrowser):
         super().__init__()
 
     def get_all_clans(self):
-        query = select(Clans).where(Clans.is_true_clan == True)  # type: ignore
+        query = select(Clans).where(Clans.is_true_clan == True)  #noqa: E712
         return self.select_many(query)
 
     def get_all_territories(self):
-        query = select(Clans).where(Clans.is_true_clan == False)  # type: ignore
+        query = select(Clans).where(Clans.is_true_clan == False)  #noqa: E712
         return self.select_many(query)
 
     def get_clan_by_name(self, name: str) -> Clans:
@@ -71,10 +71,10 @@ class DbClanConfig(DbBrowser):
     def get_real_clan(self, id: str | int) -> Clans | None:
         if isinstance(id, str):
             query = select(Clans).where(
-                and_(Clans.name == id.capitalize(), Clans.is_true_clan == True)
+                and_(Clans.name == id.capitalize(), Clans.is_true_clan == True)  #noqa: E712
             )
         else:
             query = select(Clans).where(
-                and_(Clans.no == id, Clans.is_true_clan == True)
+                and_(Clans.no == id, Clans.is_true_clan == True)  #noqa: E712
             )
         return self.safe_select_one(query)

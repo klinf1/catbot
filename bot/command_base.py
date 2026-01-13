@@ -105,6 +105,7 @@ class CallbackBase:
         self.chat_id: int = self.update.effective_chat.id
         self.bot: Bot = self.context.bot
         self.user: User = self.update.callback_query.from_user  # type: ignore
+        self.topic_id: int = getenv("TOPIC")
 
     async def __aenter__(self):
         await self.query.answer()

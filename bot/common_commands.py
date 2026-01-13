@@ -1,12 +1,13 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from bot.buttons import get_terr_choice_keyboard
 from bot.command_base import CommandBase
 from bot.herbs import HerbCommandHandler
-from bot.hunt import HuntCommandHandler
 from bot.inventory import InventoryCommandHandler
 from bot.pile import PileCommandHandler
 from db.characters import DbCharacterUser
+from db.clans import DbClanConfig
 from db.players import DbPlayerConfig
 from exceptions import BannedException, WrongChatError
 from logs.logs import main_logger, user_logger
@@ -27,11 +28,11 @@ class CommonCommandHandler(CommandBase):
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         super().__init__(update, context)
         self.player_db = DbPlayerConfig()
-        self.hunt_db = HuntCommandHandler(update, context)
         self.herb_db = HerbCommandHandler(update, context)
         self.inventory_db = InventoryCommandHandler(update, context)
         self.character_user_db = DbCharacterUser(update.message.from_user.id)
         self.pile_db = PileCommandHandler(update, context)
+        self.clans_db = DbClanConfig()
 
     async def __aenter__(self):
         main_logger.debug(
@@ -119,7 +120,16 @@ class CommonCommandHandler(CommandBase):
         )
 
     async def hunt(self):
-        name = self.text.split("\n")[0].strip().capitalize()
+        def get_all_places() -> list:
+            return [*self.clans_db.get_all_clans(), *self.clans_db.get_all_territories()]
+        name = self.text.strip().capitalize()
+        if not name:
+            await self.bot.send_message(
+                self.chat_id,
+                "Пожалуйста, укажите имя персонажа.",
+                reply_to_message_id=self.update.message.id,
+            )
+            return
         if not self.character_user_db.get_one_own_char(name):
             await self.bot.send_message(
                 self.chat_id,
@@ -128,10 +138,27 @@ class CommonCommandHandler(CommandBase):
             )
             user_logger.info(f'Охота чужим персонажем {self.update.message.from_user.id}')
             return None
-        await self.hunt_db.hunt()
+        self.context.user_data.update(
+            {
+                "state": {
+                    "name": "hunt_started",
+                    "args": {"cat": name, "user": self.user.id},
+                }
+            }
+        )
+        await self.bot.send_message(
+            self.chat_id,
+            "На какой территории вы хотите поохотиться?",
+            reply_markup=get_terr_choice_keyboard(get_all_places()),
+        )
 
     async def hunt_help(self):
-        await self.hunt_db.hunt_help()
+        text = (
+            "Это команда для охоты! Необходимо указать имя кота, а в следующем сообщении - выбрать территорию для охоты."
+        )
+        await self.context.bot.send_message(
+            self.chat_id, text, reply_to_message_id=self.update.message.id
+        )
 
     async def view_own_chars(self):
         chars = self.character_user_db.get_all_own_chars()

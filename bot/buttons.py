@@ -3,7 +3,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from bot.const import (CARRY_PREY, CLEAR_INVENTORY, EAT_PREY, LEAVE_PREY, TAKE_PREY,
                        VIEW_INVENTORY)
-from db import Prey
+from db import Clans, Prey
 from db.inventory import InventoryManager
 from db.herbs import HerbConfig
 from db.prey import DbPreyConfig
@@ -78,4 +78,11 @@ def get_pile_prey_keyboard():
             InlineKeyboardButton("Оставить", callback_data="leave"),
         ]
     ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_terr_choice_keyboard(terrs: list[Clans]):
+    keyboard = []
+    for i in terrs:
+        keyboard.append([InlineKeyboardButton(i.name, callback_data=str(i.no))])
     return InlineKeyboardMarkup(keyboard)
