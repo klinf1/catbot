@@ -103,8 +103,12 @@ class CharacterCommandHandler(CommandBase):
             )
 
     async def freeze(self):
-        name = self.text.strip().capitalize()
-        self.char_config.edit_freeze_char_by_name(name)
+        if "\n" in self.text:
+            name, reason = self.text.split("\n")
+        else:
+            await self.bot.send_message(self.chat_id, "Пожалуйста, укажите причину заморозки")
+            return
+        self.char_config.edit_freeze_char_by_name(name.strip().capitalize(), reason.strip())
         await self.bot.send_message(
             self.chat_id,
             f"Персонаж {name} заморожен.",
@@ -112,8 +116,12 @@ class CharacterCommandHandler(CommandBase):
         )
 
     async def unfreeze(self):
-        name = self.text.strip().capitalize()
-        self.char_config.edit_freeze_char_by_name(name, False)
+        if "\n" in self.text:
+            name, reason = self.text.split("\n")
+        else:
+            await self.bot.send_message(self.chat_id, "Пожалуйста, укажите причину воскрешения")
+            return
+        self.char_config.edit_freeze_char_by_name(name.strip().capitalize(), reason.strip(), False)
         await self.bot.send_message(
             self.chat_id,
             f"Персонаж {name} разморожен.",
@@ -128,7 +136,7 @@ class CharacterCommandHandler(CommandBase):
             await self.bot.send_message(self.chat_id, "Пожалуйста, укажите причину убийства")
             return
         self.char_config.edit_death_char_by_name(
-            name.capitalize().strip(), self.user.username, reason, True
+            name.capitalize().strip(), reason, True
         )
         await self.bot.send_message(
             self.chat_id,
@@ -144,7 +152,7 @@ class CharacterCommandHandler(CommandBase):
             await self.bot.send_message(self.chat_id, "Пожалуйста, укажите причину воскрешения")
             return
         self.char_config.edit_death_char_by_name(
-            name.capitalize().strip(), self.user.username, reason, False
+            name.capitalize().strip(), reason, False
         )
         await self.bot.send_message(
             self.chat_id,
