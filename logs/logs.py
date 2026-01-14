@@ -24,10 +24,15 @@ def set_up_logger(logger_name, file_name):
     return logger
 
 
-path = os.environ['LOG_PATH']
+path = os.getenv('LOG_PATH')
 
-
-main_logger = set_up_logger("main", f"{path}main.log")
-user_logger = set_up_logger("user_exc", f"{path}user_exc.log")
-schedule_logger = set_up_logger("schedule_logger", f"{path}schedule.log")
-system_logger = set_up_logger("system_logger", f"{path}system.log")
+if path is None:
+    main_logger = logging.getLogger()
+    user_logger = logging.getLogger()
+    schedule_logger = logging.getLogger()
+    system_logger = logging.getLogger()
+else:
+    main_logger = set_up_logger("main", f"{path}main.log")
+    user_logger = set_up_logger("user_exc", f"{path}user_exc.log")
+    schedule_logger = set_up_logger("schedule_logger", f"{path}schedule.log")
+    system_logger = set_up_logger("system_logger", f"{path}system.log")

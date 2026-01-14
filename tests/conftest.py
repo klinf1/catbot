@@ -1,11 +1,11 @@
-import contextlib
 from dataclasses import dataclass
+import logging
 from typing import Any, Iterable
 
 import pytest
-from sqlmodel import SQLModel, Session, func, select
+from sqlmodel import SQLModel, Session, func, select, create_engine
 
-from db import DbBrowser, engine, Players, Characters
+from db import DbBrowser, Players, Characters, SQLModel as Tables
 
 
 @dataclass(frozen=True)
@@ -22,18 +22,19 @@ class FillData:
     test_cat_two = dict(name=cat_name_two_1, player_chat_id=player_w_1_cat, hunting=1, age=10)
 
 
-@contextlib.contextmanager
-def _mock_session(*args, **kwargs):
-    #conn = engine.connect()
-    session = Session(engine, expire_on_commit=False)
-    yield session
-    session.rollback()
+def _create_memory_bd():
+    engine = create_engine("sqlite:///:memory:")
+    with engine.connect() as c:
+        cur = c.connection.cursor()
+        cur.execute('PRAGMA foreign_keys = ON;')
+    Tables.metadata.create_all(engine)
+    return engine
 
 
 class MockBrowser(DbBrowser):
         
         def __init__(self):
-            self.session = Session(engine, expire_on_commit=False)
+            self.session = Session(_create_memory_bd())
 
         def add(self, table):
             self.session.add(table)
@@ -103,7 +104,7 @@ class BaseTest:
         def compare_instanse(dbres: SQLModel, eta: SQLModel):
             if dbres.__class__ != eta.__class__:
                 return False
-            for field_name in dbres.model_fields.keys():
+            for field_name in dbres.__class__.model_fields.keys():
                 if getattr(dbres, field_name) != getattr(eta, field_name) and field_name != pk_name:
                     return False
             return True
@@ -126,7 +127,12 @@ class BaseTest:
 
 @pytest.fixture()
 def last_char_no():
-    res = DbBrowser().safe_select_one(select(func.max(Characters.no)))
+    res = MockBrowser().safe_select_one(select(func.max(Characters.no)))
     if res is None:
         return 0
     return res
+
+
+@pytest.fixture(scope="function", autouse=True)
+def mock_log(mocker):
+    mocker.patch("logs.logs.set_up_logger", side_effect=logging.getLogger)
