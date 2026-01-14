@@ -102,7 +102,6 @@ class DbCharacterConfig(DbBrowser):
 
     @staticmethod
     def _edit_single_stat(char: Characters, stat: str, value: Any):
-        print(stat, value)
         if stat == "clan_no":
             try:
                 int(value)
