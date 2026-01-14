@@ -464,7 +464,7 @@ class Characters(SQLModel, table=True):
         default=None, foreign_key="clans.no", ondelete="SET NULL"
     )
     hunger: int = 0
-    nutrition: int = Field(sa_column=Column(Integer, default=0))
+    nutrition: int = Field(default=0, sa_column=Column(Integer, default=0))
     age: int
     is_frozen: bool = False
     is_dead: bool = False
