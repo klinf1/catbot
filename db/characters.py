@@ -57,7 +57,7 @@ class DbCharacterConfig(DbBrowser):
         self.add(char)
 
     def edit_character(self, name: str, params: dict[str, Any], reason: str):
-        char = self.get_char_by_name(name.capitalize())
+        char = self.get_char_by_name(name)
         for column, value in params.items():
             self.ins_char_hist(char.no, self.admin, column, getattr(char, column), str(value), reason)
             char = self._edit_single_stat(char, column, value)

@@ -92,7 +92,7 @@ class CharacterCommandHandler(CommandBase):
             await self.bot.send_message(self.chat_id, "Пожалуйста, укажите причину изменения характеристик")
             return
         try:
-            self.char_config.edit_character(name, params_dict, reason)
+            self.char_config.edit_character(name.capitalize(), params_dict, reason)
             new_char = self.char_config.get_char_by_name(
                 params_dict.get("name") or name.capitalize()
             )
