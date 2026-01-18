@@ -10,9 +10,23 @@ on:
 
 jobs:
 
+  pre-commit:
+    environment: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v6
+      with:
+          python-version-file: "pyproject.toml"
+    - name: run pre-commit
+      run: |
+        pip install pre-commit
+        pre-commit run --all-files
+
   test:
     environment: test
     runs-on: ubuntu-latest
+    needs: pre-commit
 
     steps:
     - name: Check out the repo
