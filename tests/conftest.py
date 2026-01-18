@@ -98,14 +98,14 @@ class BaseTest:
         handler = mock_inherit
         handler.add_many([Characters(**FillData.test_cat_one_1), Characters(**FillData.test_cat_one_2), Characters(**FillData.test_cat_two)])
     
-    def compare(self, dbres: SQLModel | Iterable[SQLModel] | None, eta: SQLModel | Iterable[SQLModel] | None, pk_name: str = "no"):
+    def compare(self, dbres: SQLModel | Iterable[SQLModel] | None, eta: SQLModel | Iterable[SQLModel] | None):
         """Method to compare instanses and/or Iterables of instanses of SQLModel class disregarding any primary key fields."""
 
         def compare_instanse(dbres: SQLModel, eta: SQLModel):
             if dbres.__class__ != eta.__class__:
                 return False
-            for field_name in dbres.__class__.model_fields.keys():
-                if getattr(dbres, field_name) != getattr(eta, field_name) and field_name != pk_name:
+            for field_name, field_info in dbres.__class__.model_fields.items():
+                if getattr(dbres, field_name) != getattr(eta, field_name) and not field_info.primary_key:
                     return False
             return True
 
