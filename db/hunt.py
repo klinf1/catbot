@@ -4,7 +4,7 @@ from sqlite3 import IntegrityError
 
 from sqlmodel import Session, and_, select, or_
 
-from db import Characters, Clans, DbBrowser, Prey, PreyTerritory, Seasons
+from db import Characters, Clans, DbBrowser, Prey, PreyTerritory
 from db.characters import DbCharacterConfig
 from db.injuries import DbInjuryCharacter
 from exceptions import (CharacterDeadException, CharacterFrozenException,
@@ -49,13 +49,12 @@ class Hunt(DbBrowser):
     def get_prey(self) -> Prey | None:
         res = roll()
         logger.debug(f"roll result for hunt: {res}")
-        season_q = select(Seasons).where(Seasons.is_active == True)  # noqa: E712
-        season: Seasons = self.safe_select_one(season_q)
+        season = self.get_curr_season()
         if not season:
             mod = 0
         else:
             mod = season.hunt_mod
-        logger.info(f"Current season: {season.name} with hunt mod {mod}")
+        logger.debug(f"Current season: {season.name} with hunt mod {mod}")
         query = (
             select(Prey)
             .join(PreyTerritory, isouter=True)

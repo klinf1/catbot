@@ -914,7 +914,12 @@ class DbBrowser:
         res = self.safe_select_one(query)
         if not res:
             raise Exception(f"Настройка с наименованием {name} отсутствует!")
-        return {name: res.value}        
+        return {name: res.value}
+    
+    def get_curr_season(self) -> Seasons:
+        season_q = select(Seasons).where(Seasons.is_active == True)  # noqa: E712
+        season: Seasons = self.safe_select_one(season_q)
+        return season
 
 
 def create_tables() -> None:
