@@ -19,9 +19,7 @@ class DbCharacterUser(DbBrowser):
         return self.select_many(query)
 
     def get_one_own_char(self, name: str):
-        query = select(Characters).where(
-            and_(Characters.player_chat_id == self.chat_id, Characters.name == name)
-        )
+        query = select(Characters).where(and_(Characters.player_chat_id == self.chat_id, Characters.name == name))
         return self.safe_select_one(query)
 
 
@@ -72,7 +70,7 @@ class DbCharacterConfig(DbBrowser):
         self.ins_char_hist(char.no, self.admin, "is_frozen", str(char.is_frozen), str(flag), reason)
         char.is_frozen = flag
         self.add(char)
-    
+
     def edit_freeze_char_by_name(self, name: str, reason: str, flag: bool = True):
         char = self.get_char_by_name(name)
         self.ins_char_hist(char.no, self.admin, "is_frozen", str(char.is_frozen), str(flag), reason)
@@ -84,7 +82,7 @@ class DbCharacterConfig(DbBrowser):
         self.ins_char_hist(char.no, self.admin, "is_dead", str(char.is_dead), str(flag), reason)
         char.is_dead = flag
         self.add(char)
-    
+
     def edit_death_char_by_name(self, name: str, reason: str, flag: bool = True):
         char = self.get_char_by_name(name)
         self.ins_char_hist(char.no, self.admin, "is_dead", str(char.is_dead), str(flag), reason)
@@ -113,14 +111,14 @@ class DbCharacterConfig(DbBrowser):
                     raise NotRealClanError
         setattr(char, stat, value)
         return char
-    
+
     def get_char_history(self, name: str) -> list[CharacterHistory]:
         char: Characters = self.get_char_by_name(name)
         if not char:
             raise CharNotFound
         query = select(CharacterHistory).where(CharacterHistory.char_no == char.no)
         return self.select_many(query)
-    
+
     def get_admin_history(self, admin: str) -> list[CharacterHistory]:
         query = select(CharacterHistory).where(CharacterHistory.user == admin)
         return self.select_many(query)

@@ -46,9 +46,7 @@ class DbPreyConfig(DbBrowser):
             del params["territory"]
         new_prey = Prey(**params)
         self.add(new_prey)
-        added_prey: Prey = self.select_one(
-            select(Prey).where(Prey.name == new_prey.name)
-        )
+        added_prey: Prey = self.select_one(select(Prey).where(Prey.name == new_prey.name))
         for i in territories:
             new_terr_link = PreyTerritory(prey=added_prey.no, territory=i)
             self.add(new_terr_link)
@@ -73,9 +71,7 @@ class DbPreyConfig(DbBrowser):
         self.add(new_terr)
 
     def remove_prey_terr(self, prey: Prey, terr: Clans):
-        query = select(PreyTerritory).where(
-            and_(PreyTerritory.prey == prey.no, PreyTerritory.territory == terr.no)
-        )
+        query = select(PreyTerritory).where(and_(PreyTerritory.prey == prey.no, PreyTerritory.territory == terr.no))
         old_terr = self.safe_select_one(query)
         if old_terr:
             self.delete(old_terr)

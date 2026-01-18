@@ -2,9 +2,12 @@ import traceback
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from bot.buttons import (get_hunt_keyboard, get_single_inv_keyboard,
-                         get_view_inv_keyboard,
-                         get_pile_prey_keyboard)
+from bot.buttons import (
+    get_hunt_keyboard,
+    get_single_inv_keyboard,
+    get_view_inv_keyboard,
+    get_pile_prey_keyboard,
+)
 from bot.command_base import CallbackBase
 from db.clans import DbClanConfig
 from db.characters import DbCharacterConfig
@@ -13,7 +16,12 @@ from db.hunt import Hunt
 from db.inventory import InventoryManager
 from db.pile import PreyPileConfig
 from db.prey import DbPreyConfig
-from exceptions import CharacterDeadException, CharacterFrozenException, NoItemFoundDbError, TooMuchHuntingError
+from exceptions import (
+    CharacterDeadException,
+    CharacterFrozenException,
+    NoItemFoundDbError,
+    TooMuchHuntingError,
+)
 from logs.logs import main_logger
 
 
@@ -26,14 +34,10 @@ class HuntConversation(CallbackBase):
 
     async def action(self):
         prey = self.context.user_data["state"]["args"]["prey"]
-        char = self.char_db.get_char_by_name(
-            self.context.user_data["state"]["args"]["cat"]
-        )
+        char = self.char_db.get_char_by_name(self.context.user_data["state"]["args"]["cat"])
         match self.query_data:
             case "take_prey":
-                res = self.inventory_db.add_item(
-                    char_no=char.no, type="prey", item_id=prey.no
-                )
+                res = self.inventory_db.add_item(char_no=char.no, type="prey", item_id=prey.no)
                 await self.context.bot.send_message(self.chat_id, res)
             case "leave_prey":
                 await self.bot.send_message(self.chat_id, "Вы оставили добычу.")
@@ -50,9 +54,7 @@ class InvBaseConv(CallbackBase):
         self.inventory_db = InventoryManager()
 
     async def action(self):
-        char = self.char_db.get_char_by_name(
-            self.context.user_data["state"]["args"]["cat"]
-        )
+        char = self.char_db.get_char_by_name(self.context.user_data["state"]["args"]["cat"])
         if not char:
             main_logger.error("Character not found in InvBaseConv")
             return
@@ -78,7 +80,7 @@ class InvBaseConv(CallbackBase):
             case "clear_inv":
                 self.inventory_db.clear_inventory(char.no)
                 await self.bot.send_message(self.chat_id, "Инвентарь очищен!")
-                del self.context.user_data["state"]        
+                del self.context.user_data["state"]
 
 
 class InvViewConv(CallbackBase):
@@ -100,9 +102,7 @@ class InvViewConv(CallbackBase):
                     }
                 }
             )
-            await self.bot.send_message(
-                self.chat_id, text, reply_markup=get_single_inv_keyboard(clan_cat)
-            )
+            await self.bot.send_message(self.chat_id, text, reply_markup=get_single_inv_keyboard(clan_cat))
 
 
 class PreyViewConv(CallbackBase):
@@ -113,12 +113,10 @@ class PreyViewConv(CallbackBase):
         self.pile = PreyPileConfig()
         self.inv = InventoryManager()
         self.char_db = DbCharacterConfig()
-    
+
     async def action(self):
         prey = self.context.user_data["state"]["args"]["prey"]
-        char = self.char_db.get_char_by_name(
-            self.context.user_data["state"]["args"]["cat"]
-        )
+        char = self.char_db.get_char_by_name(self.context.user_data["state"]["args"]["cat"])
         match self.query_data:
             case "carry_prey":
                 res = self.pile.add_to_pile(char.clan_no, prey)
@@ -162,9 +160,7 @@ class PileConv(CallbackBase):
                 self.pile.get_from_pile(char.clan_no, prey)
                 await self.bot.send_message(self.chat_id, self.nom.eat(char, prey))
             case "take":
-                await self.bot.send_message(
-                    self.chat_id, self.inv.add_item(char.no, "prey", prey.no)
-                )
+                await self.bot.send_message(self.chat_id, self.inv.add_item(char.no, "prey", prey.no))
         del self.context.user_data["state"]
 
 
@@ -181,17 +177,13 @@ class HuntTerrChoice(CallbackBase):
         if self.user.id != active_user:
             return
         try:
-            main_logger.debug(
-                f"Начало охоты для {self.user.username} {cat} на территории номер {terr}"
-            )
+            main_logger.debug(f"Начало охоты для {self.user.username} {cat} на территории номер {terr}")
             prey, success = Hunt(cat, terr).hunt()
         except CharacterDeadException:
             await self.context.bot.send_message(self.chat_id, "Этот персонаж мертв!")
             main_logger.info(f"Охота с мертвым персонажем: {self.user.username}")
         except CharacterFrozenException:
-            await self.context.bot.send_message(
-                self.chat_id, "Этот персонаж сейчас неактивен!"
-            )
+            await self.context.bot.send_message(self.chat_id, "Этот персонаж сейчас неактивен!")
             main_logger.info(f"Охота с замороженным персонажем: {self.user.username}")
         except NoItemFoundDbError as err:
             await self.bot.send_message(
@@ -200,9 +192,7 @@ class HuntTerrChoice(CallbackBase):
             )
             main_logger.info(f"Ошибка поиска в БД {err} {traceback.format_exc()}")
         except TooMuchHuntingError:
-            await self.bot.send_message(
-                self.chat_id, "Этот персонаж уже достаочно поохотился в этом сезоне!"
-            )
+            await self.bot.send_message(self.chat_id, "Этот персонаж уже достаочно поохотился в этом сезоне!")
         except Exception as err:
             main_logger.error(f"{err} {traceback.format_exc()}")
         else:
@@ -222,8 +212,7 @@ class HuntTerrChoice(CallbackBase):
                 )
                 await self.context.bot.send_message(
                     self.chat_id,
-                    text=f"Охота успешна! Добыча: {prey.name}\n"
-                    "Что вы хотите сделать с добычей?",
+                    text=f"Охота успешна! Добыча: {prey.name}\nЧто вы хотите сделать с добычей?",
                     reply_markup=get_hunt_keyboard(),
                 )
             elif not prey:
@@ -237,9 +226,7 @@ class HuntTerrChoice(CallbackBase):
                     reply_to_message_id=self.topic_id,
                 )
             else:
-                await self.context.bot.send_message(
-                    self.chat_id, f"Охота на {prey.name} провалилась!!"
-                )
+                await self.context.bot.send_message(self.chat_id, f"Охота на {prey.name} провалилась!!")
                 await self.context.bot.send_message(
                     self.chat_id,
                     f"Охота {cat} на {prey.name} провалилась!",

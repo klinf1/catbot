@@ -12,29 +12,29 @@ class PreyPileConfig(DbBrowser):
         super().__init__()
         self.clan_db = DbClanConfig()
         self.prey_db = DbPreyConfig()
-    
+
     def _get_prey(self, prey: int | str | Prey) -> Prey:
         if isinstance(prey, int):
             prey = self.prey_db.get_prey_by_no(prey)
         elif isinstance(prey, str):
             prey = self.prey_db.get_prey_by_name(prey)
         return prey
-    
-    def _get_clan(self, clan: int | str| Clans) -> Clans:
+
+    def _get_clan(self, clan: int | str | Clans) -> Clans:
         if isinstance(clan, int):
             clan = self.clan_db.get_clan_by_no(clan)
         elif isinstance(clan, str):
             clan = self.clan_db.get_clan_by_name(clan)
         return clan
-    
-    def add_to_pile(self, clan: int | str| Clans, prey: int | str | Prey):
+
+    def add_to_pile(self, clan: int | str | Clans, prey: int | str | Prey):
         clan = self._get_clan(clan)
         prey = self._get_prey(prey)
         new_pile = PreyPile(clan=clan.no, prey=prey.no)
         self.add(new_pile)
         return f"Дичь {prey.name} добавлена в кучу клана {clan.name}"
-    
-    def get_from_pile(self, clan: int | str| Clans, prey: int | str | Prey):
+
+    def get_from_pile(self, clan: int | str | Clans, prey: int | str | Prey):
         clan = self._get_clan(clan)
         prey = self._get_prey(prey)
         query = select(PreyPile).where(and_(PreyPile.clan == clan.no, PreyPile.prey == prey.no))
@@ -43,8 +43,8 @@ class PreyPileConfig(DbBrowser):
             self.delete(item)
             return item
         return None
-    
+
     def get_prey_for_clan(self, clan: int | str | Clans):
         clan = self._get_clan(clan)
-        query = select(Prey).join(PreyPile, onclause= Prey.no == PreyPile.prey).where(PreyPile.clan == clan.no)
+        query = select(Prey).join(PreyPile, onclause=Prey.no == PreyPile.prey).where(PreyPile.clan == clan.no)
         return self.select_many(query)

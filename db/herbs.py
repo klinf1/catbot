@@ -1,8 +1,8 @@
-from random import choice, randint
+from random import choice
 
 from sqlmodel import Session, and_, or_, select
 
-from db import CharacterInventory, Characters, Clans, DbBrowser, Herbs
+from db import Characters, Clans, DbBrowser, Herbs
 from logs.logs import main_logger as logger
 from roll import roll
 
@@ -17,14 +17,8 @@ class HerbUser(DbBrowser):
         super().__init__()
         self.char_name = char_name
         self.territory_name = territory
-        self.char = self.select_one(
-            select(Characters).where(Characters.name == self.char_name)
-        )
-        self.territory = (
-            self.select_one(select(Clans).where(Clans.name == territory))
-            if territory
-            else None
-        )
+        self.char = self.select_one(select(Characters).where(Characters.name == self.char_name))
+        self.territory = self.select_one(select(Clans).where(Clans.name == territory)) if territory else None
         self.herb = self.get_herb()
 
     def gather(self) -> tuple[Herbs | None, bool]:
@@ -39,9 +33,8 @@ class HerbUser(DbBrowser):
                 Herbs.rarity_min <= res,
                 (
                     or_(
-                        Herbs.territory == None,
-                        Herbs.territory
-                        == (self.territory.no if self.territory else -1),
+                        Herbs.territory == None,  # noqa: E711
+                        Herbs.territory == (self.territory.no if self.territory else -1),
                     )
                 ),
             )
@@ -85,7 +78,7 @@ class HerbConfig(DbBrowser):
 
     def get_all_herbs(self):
         return self.select_many(select(Herbs))
-    
+
     def get_herb_by_no(self, no: int) -> Herbs | None:
         return self.safe_select_one(select(Herbs).where(Herbs.no == no))
 

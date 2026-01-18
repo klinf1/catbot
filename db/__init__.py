@@ -7,9 +7,18 @@ from typing import Any, ClassVar, Iterable
 from dotenv import load_dotenv
 from pydantic import computed_field, field_validator
 from sqlalchemy.ext.asyncio.engine import create_async_engine
-from sqlmodel import (CheckConstraint, Column, Field, Integer,
-                      Session, SQLModel, UniqueConstraint, and_, create_engine,
-                      select)
+from sqlmodel import (
+    CheckConstraint,
+    Column,
+    Field,
+    Integer,
+    Session,
+    SQLModel,
+    UniqueConstraint,
+    and_,
+    create_engine,
+    select,
+)
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel.sql.expression import SelectOfScalar
 from db.table_data import AGES, CLANS, SEASONS, SETTINGS
@@ -144,7 +153,7 @@ class Seasons(SQLModel, table=True):
     @staticmethod
     def attrs():
         return ["name", "hunt_mod", "herb_mod", "next"]
-    
+
     def __str__(self):
         return "\n".join(
             [
@@ -173,10 +182,10 @@ class Clans(SQLModel, table=True):
     @staticmethod
     def attrs():
         return ["is_true_clan"]
-    
+
     def prey_pile(self):
         res = 0
-        query = select(Prey).join(PreyPile, onclause= PreyPile.prey == Prey.no).where(PreyPile.clan == self.no)
+        query = select(Prey).join(PreyPile, onclause=PreyPile.prey == Prey.no).where(PreyPile.clan == self.no)
         with Session(engine) as s:
             all_prey = s.exec(query).all()
         for item in all_prey:
@@ -185,9 +194,7 @@ class Clans(SQLModel, table=True):
 
     def __str__(self):
         leader = select(Characters).where(Characters.no == self.leader)
-        prey = (
-            select(Prey).join(PreyTerritory).where(PreyTerritory.territory == self.no)
-        )
+        prey = select(Prey).join(PreyTerritory).where(PreyTerritory.territory == self.no)
         with Session(engine) as s:
             leader = s.exec(leader).first()
             prey = s.exec(prey).all()
@@ -232,18 +239,12 @@ class Herbs(SQLModel, table=True):
     __table_args__ = (UniqueConstraint("name", name="herbs_name_unique"),)
     no: int | None = Field(primary_key=True, default=None, index=True)
     name: str = Field(index=True)
-    territory: int | None = Field(
-        foreign_key="clans.no", default=None, ondelete="SET NULL"
-    )
+    territory: int | None = Field(foreign_key="clans.no", default=None, ondelete="SET NULL")
     sum_required: int = 0
     rarity_min: int
     rarity_max: int
-    disease: int | None = Field(
-        foreign_key="diseases.no", default=None, ondelete="SET NULL"
-    )
-    injury: int | None = Field(
-        foreign_key="injuries.no", default=None, ondelete="SET NULL"
-    )
+    disease: int | None = Field(foreign_key="diseases.no", default=None, ondelete="SET NULL")
+    injury: int | None = Field(foreign_key="injuries.no", default=None, ondelete="SET NULL")
 
     @staticmethod
     def attrs():
@@ -315,7 +316,7 @@ class CharacterInventory(SQLModel, table=True):
     char_no: int = Field(foreign_key="characters.no", ondelete="CASCADE")
     type: str
     item: int
-    
+
     @field_validator("type")
     @classmethod
     def check_type(cls, v: Any):
@@ -460,9 +461,7 @@ class Characters(SQLModel, table=True):
     healing: int = Field(default=0, sa_column=Column(Integer, default=0))
     faith: int = Field(default=0, sa_column=Column(Integer, default=0))
     role: int | None = Field(default=None, foreign_key="roles.no", ondelete="SET NULL")
-    clan_no: int | None = Field(
-        default=None, foreign_key="clans.no", ondelete="SET NULL"
-    )
+    clan_no: int | None = Field(default=None, foreign_key="clans.no", ondelete="SET NULL")
     hunger: int = 0
     nutrition: int = Field(default=0, sa_column=Column(Integer, default=0))
     age: int
@@ -498,7 +497,7 @@ class Characters(SQLModel, table=True):
         CheckConstraint(faith.sa_column >= 0),
         CheckConstraint(faith.sa_column <= 10),
     )
-    
+
     @property
     def session(self):
         return Session(engine)
@@ -510,9 +509,7 @@ class Characters(SQLModel, table=True):
 
     @property
     def traumas(self) -> list:
-        query = select(CharacterDisability).where(
-            CharacterDisability.character == self.no
-        )
+        query = select(CharacterDisability).where(CharacterDisability.character == self.no)
         with self.session:
             traumas = [t for t in self.session.exec(query).all()]
         return traumas
@@ -524,8 +521,8 @@ class Characters(SQLModel, table=True):
 
     @computed_field
     @property
-    def actual_stats(self) -> dict[str, int]:        
-        stats =  {
+    def actual_stats(self) -> dict[str, int]:
+        stats = {
             "hunting": self.get_actual_stat("hunting"),
             "agility": self.get_actual_stat("agility"),
             "hearing": self.get_actual_stat("hearing"),
@@ -541,7 +538,7 @@ class Characters(SQLModel, table=True):
         }
         logger.debug(f"Получены актуальные характеристики для {self.name}")
         return stats
-    
+
     @staticmethod
     def _get_hunger_pen() -> dict[int, int]:
         query = select(Settings).where(Settings.name.contains("hunger_pen", autoescape=True))
@@ -589,9 +586,7 @@ class Characters(SQLModel, table=True):
                     cls_group[1],
                     onclause=cls_group[0].issue == cls_group[1].issue,  # type: ignore
                 )
-                .where(
-                    and_(cls_group[1].character == self.no, cls_group[0].stat == stat)
-                )
+                .where(and_(cls_group[1].character == self.no, cls_group[0].stat == stat))
             )
             with self.session as s:
                 pen = s.exec(query).all()
@@ -673,9 +668,7 @@ class Prey(SQLModel, table=True):
     amount: int
     rarity: int = Field(sa_column=Column(Integer, nullable=False))
     sum_required: int = Field(sa_column=Column(Integer, nullable=False))
-    injury: int | None = Field(
-        default=None, foreign_key="injuries.no", ondelete="SET NULL"
-    )
+    injury: int | None = Field(default=None, foreign_key="injuries.no", ondelete="SET NULL")
     injury_chance: int = Field(default=0, sa_column=Column(Integer, default=0))
     __table_args__ = (
         UniqueConstraint("name", name="prey_name_unique"),
@@ -731,13 +724,14 @@ class Prey(SQLModel, table=True):
                 f"Территория проживания: {clan_name}",
                 f"Наносимое ранение: {inj}",
                 f"Шанс ранения: {self.injury_chance or 'нет'}",
-            ])
+            ]
+        )
 
 
 class PreyPile(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
     clan: int = Field(foreign_key="clans.no", ondelete="CASCADE")
-    prey: int = Field(foreign_key="prey.no", ondelete='CASCADE')
+    prey: int = Field(foreign_key="prey.no", ondelete="CASCADE")
     date_added: datetime = Field(default=datetime.now())
 
 
@@ -750,14 +744,14 @@ class Ages(SQLModel, table=True):
 
     @staticmethod
     def attrs():
-        return ['name', 'max_age', 'food_req']
+        return ["name", "max_age", "food_req"]
 
     def __str__(self):
         return "\n".join(
             [
                 f"Название: {self.name}",
                 f"Верхняя граница: {self.max_age}",
-                f"Необходимое количество еды: {self.food_req}"
+                f"Необходимое количество еды: {self.food_req}",
             ]
         )
 
@@ -766,17 +760,10 @@ class Settings(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
     name: str
     value: str
-    __table_args__ = (
-        UniqueConstraint("name", name="setting_name_unique"),
-    )
+    __table_args__ = (UniqueConstraint("name", name="setting_name_unique"),)
 
     def __str__(self):
-        return "\n".join(
-            [
-                f"Название: {self.name}",
-                f"Значение: {self.value}"
-            ]
-        )
+        return "\n".join([f"Название: {self.name}", f"Значение: {self.value}"])
 
 
 class CharacterHistory(SQLModel, table=True):
@@ -803,7 +790,7 @@ class CharacterHistory(SQLModel, table=True):
                 f"Параметр: {self.field}",
                 f"Старое значение: {self.old}",
                 f"Новое значение: {self.new}",
-                f"Указанная причина изменения: {self.reason}"
+                f"Указанная причина изменения: {self.reason}",
             ]
         )
 
@@ -820,21 +807,21 @@ class DbBrowser:
         with self.session as s:
             s.add(table)
             self.commit()
-    
+
     def add_many(self, val: Iterable[SQLModel]):
         with self.session as s:
             for i in val:
-                assert isinstance(i, SQLModel)            
+                assert isinstance(i, SQLModel)
                 s.add(i)
             s.commit()
-    
+
     def delete_many(self, val: Iterable[SQLModel]) -> None:
         with self.session as s:
             for i in val:
-                assert isinstance(i, SQLModel)    
+                assert isinstance(i, SQLModel)
                 s.delete(i)
             s.commit()
-    
+
     async def as_add(self, table: type[SQLModel]):
         async with self.async_session as s:
             s.add(table)
@@ -844,7 +831,7 @@ class DbBrowser:
         with self.session as s:
             s.delete(table)
             self.commit()
-    
+
     async def as_delete(self, table: SQLModel):
         async with self.async_session as s:
             s.delete(table)
@@ -853,7 +840,7 @@ class DbBrowser:
     def select_one(self, query: SelectOfScalar) -> SQLModel:
         with self.session as s:
             return s.exec(query).one()
-    
+
     async def as_select_one(self, query: SelectOfScalar) -> SQLModel:
         async with self.async_session as s:
             res = await s.exec(query)
@@ -862,7 +849,7 @@ class DbBrowser:
     def select_many(self, query: SelectOfScalar):
         with self.session as s:
             return s.exec(query).all()
-        
+
     async def as_select_many(self, query: SelectOfScalar):
         async with self.async_session as s:
             res = await s.exec(query)
@@ -871,12 +858,12 @@ class DbBrowser:
     def safe_select_one(self, query: SelectOfScalar) -> SQLModel | None:
         with self.session as s:
             return s.exec(query).first()
-    
+
     async def as_safe_select_one(self, query: SelectOfScalar) -> SQLModel | None:
         async with self.async_session as s:
             res = await s.exec(query)
             return res.first()
-    
+
     def fill_default(self) -> None:
         if not self.select_many(select(Ages)):
             for i in AGES:
@@ -891,10 +878,10 @@ class DbBrowser:
             for i in SETTINGS:
                 self.add(Settings(**i))
         return None
-    
+
     def ins_char_hist(self, char, user, field, old, new, reason):
         self.add(CharacterHistory(char_no=char, user=user, field=field, old=old, new=new, reason=reason))
-    
+
     def add_admins(self, ids: list[str], usernames: list[str]):
         for id, username in zip(ids, usernames):
             username = username.replace("'", "")
@@ -908,14 +895,14 @@ class DbBrowser:
                         is_superuser=True,
                     )
                     self.add(admin)
-    
+
     def get_setting(self, name: str) -> dict[str, str]:
         query = select(Settings).where(Settings.name == name)
         res = self.safe_select_one(query)
         if not res:
             raise Exception(f"Настройка с наименованием {name} отсутствует!")
         return {name: res.value}
-    
+
     def get_curr_season(self) -> Seasons:
         season_q = select(Seasons).where(Seasons.is_active == True)  # noqa: E712
         season: Seasons = self.safe_select_one(season_q)
@@ -926,6 +913,6 @@ def create_tables() -> None:
     """Created baseline tables if they do not exist already."""
     with engine.connect() as c:
         cur = c.connection.cursor()
-        cur.execute('PRAGMA foreign_keys = ON;')
+        cur.execute("PRAGMA foreign_keys = ON;")
     SQLModel.metadata.create_all(engine)
     DbBrowser().fill_default()

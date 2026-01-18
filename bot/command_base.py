@@ -60,7 +60,7 @@ class CommandBase:
         params_list = params_str.strip().split("\n")
         for item in params_list:
             col, value = self.prepare_for_db(item.strip().split(":", 1))
-            if col and value and (col in db_entity.attrs() or col + '*' in db_entity.attrs()):
+            if col and value and (col in db_entity.attrs() or col + "*" in db_entity.attrs()):
                 params_dict.update({col: value})
         params_dict["name"] = name.capitalize()
         return params_dict
@@ -71,21 +71,17 @@ class CommandBase:
             name, params_str = self.text.split("\n", 1)
         except ValueError as e:
             main_logger.error(e)
-            raise EditError(
-                "Ошибка при формировании параметров для замены: отсутствуют подходящие параметры."
-            )
+            raise EditError("Ошибка при формировании параметров для замены: отсутствуют подходящие параметры.")
         params_list = params_str.strip().split("\n")
         for item in params_list:
             col, value = self.prepare_for_db(item.strip().split(":", 1))
-            if col and (col in db_entity.attrs() or col + '*' in db_entity.attrs() or col in ("name", "Name")):
+            if col and (col in db_entity.attrs() or col + "*" in db_entity.attrs() or col in ("name", "Name")):
                 value = await self.__set_explicit_none(value)
                 params_dict.update({col: value})
         if params_dict == {}:
-            raise EditError(
-                "Ошибка при формировании параметров для замены: отсутствуют подходящие параметры."
-            )
+            raise EditError("Ошибка при формировании параметров для замены: отсутствуют подходящие параметры.")
         return [name.capitalize(), params_dict]
-    
+
     @staticmethod
     def validate_setting(val: Any) -> bool:
         try:

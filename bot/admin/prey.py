@@ -21,14 +21,10 @@ class PreyCommandHandler(CommandBase):
         params_dict.update({"name": name.capitalize()})
         for item in params_list:
             col, value = prepare_for_db(item.strip().split(":", 1))
-            if (
-                col and value and (col in Prey.attrs() or (col + "*") in Prey.attrs())
-            ):  # TODO: убрать ебучий костыль
+            if col and value and (col in Prey.attrs() or (col + "*") in Prey.attrs()):  # TODO: убрать ебучий костыль
                 params_dict.update({col.strip(): value.strip()})
         self.prey_db.add_new_prey(params_dict)
-        await self.context.bot.send_message(
-            self.chat_id, f"Дичь {name} добавлена успешно!"
-        )
+        await self.context.bot.send_message(self.chat_id, f"Дичь {name} добавлена успешно!")
 
     async def add_prey_help(self):
         attrs = "\n".join(Prey.attrs())
@@ -47,7 +43,7 @@ class PreyCommandHandler(CommandBase):
     async def delete_prey(self):
         prey = self.prey_db.get_prey_by_name(self.text.capitalize())
         self.prey_db.delete(prey)
-        await self.context.bot.send_message(self.chat_id, f'Дичь {self.text.capitalize()} удалена успешно.')
+        await self.context.bot.send_message(self.chat_id, f"Дичь {self.text.capitalize()} удалена успешно.")
 
     async def delete_prey_help(self):
         text = "Это команда для удаления одного вида дичи. Необходимо ввести название через пробел."
@@ -96,6 +92,4 @@ class PreyCommandHandler(CommandBase):
         prey = self.prey_db.get_prey_by_name(name)
         self.prey_db.reset_territories(prey, terr)
         prey = self.prey_db.get_prey_by_name(name)
-        await self.context.bot.send_message(
-            self.chat_id, f"Обновленная дичь: {str(prey)}"
-        )
+        await self.context.bot.send_message(self.chat_id, f"Обновленная дичь: {str(prey)}")

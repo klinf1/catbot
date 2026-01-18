@@ -49,8 +49,7 @@ class PlayerCommandHandler(CommandBase):
     async def view_all_players(self):
         players = self.player_db.get_all_players()
         await self.view_list_from_db(players)
-    
+
     async def view_ban_list(self):
         players = self.player_db.get_all_banned()
         await self.view_list_from_db(players, "Черный список пуст.")
-

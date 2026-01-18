@@ -7,8 +7,12 @@ from sqlmodel import Session, and_, select, or_
 from db import Characters, Clans, DbBrowser, Prey, PreyTerritory
 from db.characters import DbCharacterConfig
 from db.injuries import DbInjuryCharacter
-from exceptions import (CharacterDeadException, CharacterFrozenException,
-                        NoItemFoundDbError, TooMuchHuntingError)
+from exceptions import (
+    CharacterDeadException,
+    CharacterFrozenException,
+    NoItemFoundDbError,
+    TooMuchHuntingError,
+)
 from logs.logs import main_logger as logger
 from roll import roll
 
@@ -28,16 +32,20 @@ class Hunt(DbBrowser):
         self.prey = self.get_prey()
         self.settings = self.get_setting("hunt_attempts")
         self.char_config = DbCharacterConfig()
-    
+
     def hunt(self) -> tuple[Prey | None, bool]:
         self.validate_char()
         res = self.check_success()
-        self.char_config.edit_character(self.char.name, {"curr_hunts": self.char.curr_hunts+1}, f"hunt at {datetime.now()}")
+        self.char_config.edit_character(
+            self.char.name,
+            {"curr_hunts": self.char.curr_hunts + 1},
+            f"hunt at {datetime.now()}",
+        )
         if res is False:
             # self.apply_consequences()
             pass
         return self.prey, res
-    
+
     def validate_char(self):
         if self.char.is_frozen:
             raise CharacterFrozenException
@@ -63,7 +71,8 @@ class Hunt(DbBrowser):
                     Prey.rarity + mod >= res,
                     or_(
                         PreyTerritory.territory == self.clan.no,
-                        select(PreyTerritory).join(Prey)  # noqa: E712
+                        select(PreyTerritory)  # noqa: E712
+                        .join(Prey)  # noqa: E712
                         .where(PreyTerritory.prey == Prey.no)  # noqa: E712
                         .exists()  # noqa: E712
                         == False,  # noqa: E712
@@ -82,7 +91,7 @@ class Hunt(DbBrowser):
         return prey
 
     def get_char(self) -> Characters:
-        logger.debug(f'getting char data for name {self.char_name}')
+        logger.debug(f"getting char data for name {self.char_name}")
         query = select(Characters).where(Characters.name == self.char_name)
         res = self.safe_select_one(query)
         if not res:
@@ -112,15 +121,9 @@ class Hunt(DbBrowser):
         return True
 
     def apply_consequences(self) -> None:
-        if (
-            self.prey.injury_chance
-            and randint(1, 100) < self.prey.injury_chance
-            and self.prey.injury
-        ):
+        if self.prey.injury_chance and randint(1, 100) < self.prey.injury_chance and self.prey.injury:
             logger.debug(f"{self.char.name} получает ранение {self.prey.injury}")
             try:
                 DbInjuryCharacter(self.char.no, self.prey.injury).add_injury()
             except IntegrityError:
-                logger.debug(
-                    f"Повторное ранение {self.prey.injury} для {self.char.name}, игнорирую"
-                )
+                logger.debug(f"Повторное ранение {self.prey.injury} для {self.char.name}, игнорирую")

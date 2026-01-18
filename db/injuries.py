@@ -46,9 +46,7 @@ class DbInjuryConfigure(DbBrowser):
             raise Exception(f"No injury with the name {name}")
         self.delete(inj)
 
-    def edit_injury(
-        self, no: int, name: str | None = None, penalties: dict[str, int] = {}
-    ):
+    def edit_injury(self, no: int, name: str | None = None, penalties: dict[str, int] = {}):
         inj = select(Injuries).where(Injuries.no == no)
         with self.session as s:
             inj = s.exec(inj).one()
@@ -63,24 +61,16 @@ class DbInjuryConfigure(DbBrowser):
 
     def _edit_router(self, no: int, penalties: dict[str, int], existing_stats):
         existing_pens = [stat for stat in existing_stats]
-        pen_new = {
-            key: value for key, value in penalties.items() if key not in existing_pens
-        }
-        pens_to_edit = {
-            key: value for key, value in penalties.items() if key in existing_pens
-        }
-        pens_to_delete = [
-            stat for stat in existing_pens if stat not in penalties.keys()
-        ]
+        pen_new = {key: value for key, value in penalties.items() if key not in existing_pens}
+        pens_to_edit = {key: value for key, value in penalties.items() if key in existing_pens}
+        pens_to_delete = [stat for stat in existing_pens if stat not in penalties.keys()]
         self._add_injury_stats(self.get_injury_by_no(no).name, pen_new)
         self._change_injury_stat(no, pens_to_edit)
         self._delete_injury_stats(no, pens_to_delete)
 
     def _change_injury_stat(self, no: int, penalties: dict[str, int]):
         for key, value in penalties.items():
-            inj_stat = select(InjuryStat).where(
-                and_(InjuryStat.issue == no, InjuryStat.stat == key)
-            )
+            inj_stat = select(InjuryStat).where(and_(InjuryStat.issue == no, InjuryStat.stat == key))
             with self.session as s:
                 inj_stat = s.exec(inj_stat).one()
                 inj_stat.penalty = value
@@ -94,9 +84,7 @@ class DbInjuryConfigure(DbBrowser):
 
     def _delete_injury_stats(self, no: int, to_delete: list[str]):
         for stat in to_delete:
-            query = select(InjuryStat).where(
-                and_(InjuryStat.issue == no, InjuryStat.stat == stat)
-            )
+            query = select(InjuryStat).where(and_(InjuryStat.issue == no, InjuryStat.stat == stat))
             with self.session as s:
                 stat_to_delete = s.exec(query).one()
             self.delete(stat_to_delete)
@@ -104,7 +92,6 @@ class DbInjuryConfigure(DbBrowser):
     def get_injury_by_no(self, no: int):
         query = select(Injuries).where(Injuries.no == no)
         return self.safe_select_one(query)
-    
 
     def view_all_injuries(self):
         query = select(Injuries).join(InjuryStat)

@@ -12,9 +12,7 @@ def not_banned(func):
         with Session(engine) as s:
             user = s.exec(query).one()
         if user.is_banned:
-            self.context.chat_data.update(
-                {"exc": {"banned": [user.chat_id, user.username]}}
-            )
+            self.context.chat_data.update({"exc": {"banned": [user.chat_id, user.username]}})
             raise BannedException("Banned af")
         return func(self, *args, **kwargs)
 
@@ -28,9 +26,7 @@ def superuser_command(func):
         with Session(engine) as s:
             user = s.exec(query).one()
         if user.is_superuser is False:
-            self.context.chat_data.update(
-                {"exc": {"superuser_error": [user.chat_id, user.username]}}
-            )
+            self.context.chat_data.update({"exc": {"superuser_error": [user.chat_id, user.username]}})
             raise NoRightException("No rights!")
         return func(self, *args, **kwargs)
 
@@ -40,6 +36,7 @@ def superuser_command(func):
 def not_a_command(func):
     async def dummy():
         return None
+
     def wrapper(self, *args, **kwargs):
         logger.debug("Not a proper command, skipping...")
         return dummy()

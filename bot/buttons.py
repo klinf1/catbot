@@ -1,8 +1,14 @@
 from apscheduler.job import Job
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-from bot.const import (CARRY_PREY, CLEAR_INVENTORY, EAT_PREY, LEAVE_PREY, TAKE_PREY,
-                       VIEW_INVENTORY)
+from bot.const import (
+    CARRY_PREY,
+    CLEAR_INVENTORY,
+    EAT_PREY,
+    LEAVE_PREY,
+    TAKE_PREY,
+    VIEW_INVENTORY,
+)
 from db import Clans, Prey
 from db.inventory import InventoryManager
 from db.herbs import HerbConfig
@@ -35,10 +41,10 @@ def get_view_inv_keyboard(no: int) -> InlineKeyboardMarkup:
     keyboard = [[]]
     for i in inv:
         type = i.type
-        if type == 'prey':
+        if type == "prey":
             item = DbPreyConfig().get_prey_by_no(i.item)
             keyboard[0].append(InlineKeyboardButton(item.name, callback_data=f"Дичь:{item.no}"))
-        elif type == 'herb':
+        elif type == "herb":
             item = HerbConfig().get_herb_by_no(i.item)
             keyboard[0].append(InlineKeyboardButton(item.name, callback_data=f"Трава:{item.no}"))
     return InlineKeyboardMarkup(keyboard)
@@ -48,7 +54,7 @@ def get_single_inv_keyboard(clan_cat: bool = True) -> InlineKeyboardMarkup:
     keyboard = [
         [
             InlineKeyboardButton("Выбросить", callback_data=LEAVE_PREY),
-            InlineKeyboardButton("Съесть", callback_data=EAT_PREY),            
+            InlineKeyboardButton("Съесть", callback_data=EAT_PREY),
         ]
     ]
     if clan_cat is True:

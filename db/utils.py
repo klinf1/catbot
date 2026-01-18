@@ -15,6 +15,7 @@ class StatsEnum(StrEnum):
     HEALING = "healing"
     FAITH = "faith"
 
+
 class PreyStats(StrEnum):
     speed = "speed"
     stamina = "stamina"

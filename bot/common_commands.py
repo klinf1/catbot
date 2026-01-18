@@ -35,9 +35,7 @@ class CommonCommandHandler(CommandBase):
         self.clans_db = DbClanConfig()
 
     async def __aenter__(self):
-        main_logger.debug(
-            f"Common command manager starting with command: {self.command}"
-        )
+        main_logger.debug(f"Common command manager starting with command: {self.command}")
         player = self.player_db.get_player_by_id(self.user.id)
         if not player:
             self.player_db.add_player(
@@ -46,9 +44,7 @@ class CommonCommandHandler(CommandBase):
                 self.user.first_name,
                 self.user.last_name,
             )
-            main_logger.info(
-                f"Игрок {self.user.id} {self.user.username} зарегистрирован"
-            )
+            main_logger.info(f"Игрок {self.user.id} {self.user.username} зарегистрирован")
         else:
             if self.user.username != player.username and self.user.username is not None:
                 self.player_db.update_username(player, self.user.username)
@@ -59,9 +55,7 @@ class CommonCommandHandler(CommandBase):
             and str(self.chat_id) not in self.group_chats
             and (not player.is_admin or not player.is_superuser)
         ):
-            await self.bot.send_message(
-                self.chat_id, "Эта команда доступна только в групповом чате!"
-            )
+            await self.bot.send_message(self.chat_id, "Эта команда доступна только в групповом чате!")
             raise WrongChatError
         return self
 
@@ -100,9 +94,7 @@ class CommonCommandHandler(CommandBase):
                     "add_injury_help",
                 ]
             )
-        await self.context.bot.send_message(
-            self.chat_id, commands, reply_to_message_id=self.update.message.id
-        )
+        await self.context.bot.send_message(self.chat_id, commands, reply_to_message_id=self.update.message.id)
 
     async def start(self):
         if self.chat_id > 0:
@@ -121,7 +113,11 @@ class CommonCommandHandler(CommandBase):
 
     async def hunt(self):
         def get_all_places() -> list:
-            return [*self.clans_db.get_all_clans(), *self.clans_db.get_all_territories()]
+            return [
+                *self.clans_db.get_all_clans(),
+                *self.clans_db.get_all_territories(),
+            ]
+
         name = self.text.strip().capitalize()
         if not name:
             await self.bot.send_message(
@@ -136,7 +132,7 @@ class CommonCommandHandler(CommandBase):
                 self.char_404_msg,
                 reply_to_message_id=self.update.message.id,
             )
-            user_logger.info(f'Охота чужим персонажем {self.update.message.from_user.id}')
+            user_logger.info(f"Охота чужим персонажем {self.update.message.from_user.id}")
             return None
         self.context.user_data.update(
             {
@@ -153,12 +149,8 @@ class CommonCommandHandler(CommandBase):
         )
 
     async def hunt_help(self):
-        text = (
-            "Это команда для охоты! Необходимо указать имя кота, а в следующем сообщении - выбрать территорию для охоты."
-        )
-        await self.context.bot.send_message(
-            self.chat_id, text, reply_to_message_id=self.update.message.id
-        )
+        text = "Это команда для охоты! Необходимо указать имя кота, а в следующем сообщении - выбрать территорию для охоты."
+        await self.context.bot.send_message(self.chat_id, text, reply_to_message_id=self.update.message.id)
 
     async def view_own_chars(self):
         chars = self.character_user_db.get_all_own_chars()
@@ -185,6 +177,6 @@ class CommonCommandHandler(CommandBase):
 
     async def inventory(self):
         await self.inventory_db.send_inventory_message()
-    
+
     async def pile(self):
         await self.pile_db.send_pile_message()

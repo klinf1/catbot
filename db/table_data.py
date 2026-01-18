@@ -1,17 +1,35 @@
 SETTINGS = [
-    {'name': 'hunt_attempts', 'value': '5'},
-    {'name': 'max_hunger', 'value': '3'},
-    {'name': 'hunger_pen_1', 'value': '1'},
-    {'name': 'hunger_pen_2', 'value': '3'},
-    {'name': 'hunger_pen_3', 'value': '5'},
-    {'name': 'max_age', 'value': '150'}
+    {"name": "hunt_attempts", "value": "5"},
+    {"name": "max_hunger", "value": "3"},
+    {"name": "hunger_pen_1", "value": "1"},
+    {"name": "hunger_pen_2", "value": "3"},
+    {"name": "hunger_pen_3", "value": "5"},
+    {"name": "max_age", "value": "150"},
 ]
 
 SEASONS = [
-    {"name": "Весна", "hunt_mod": -25, "herb_mod": 0, "is_active": False, "next": "Лето"},
+    {
+        "name": "Весна",
+        "hunt_mod": -25,
+        "herb_mod": 0,
+        "is_active": False,
+        "next": "Лето",
+    },
     {"name": "Лето", "hunt_mod": 0, "herb_mod": 0, "is_active": True, "next": "Осень"},
-    {"name": "Осень", "hunt_mod": -25, "herb_mod": 0, "is_active": False, "next": "Зима"},
-    {"name": "Зима", "hunt_mod": -50, "herb_mod": 0, "is_active": False, "next": "Весна"},
+    {
+        "name": "Осень",
+        "hunt_mod": -25,
+        "herb_mod": 0,
+        "is_active": False,
+        "next": "Зима",
+    },
+    {
+        "name": "Зима",
+        "hunt_mod": -50,
+        "herb_mod": 0,
+        "is_active": False,
+        "next": "Весна",
+    },
 ]
 
 AGES = [
@@ -22,5 +40,5 @@ AGES = [
 
 CLANS = [
     {"name": "Клан добрых", "is_true_clan": True},
-    {"name": "Территория злых", "is_true_clan": False}
+    {"name": "Территория злых", "is_true_clan": False},
 ]
