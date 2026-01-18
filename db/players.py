@@ -62,8 +62,7 @@ class DbPlayerConfig(DbBrowser):
 
     def check_if_user_is_admin(self, chat_id) -> bool:
         query = select(Players).where(Players.chat_id == chat_id)
-        with self.session as s:
-            player = s.exec(query).one()
+        player: Players = self.select_one(query)
         if player.is_admin or player.is_superuser:
             return True
         return False

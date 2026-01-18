@@ -32,8 +32,7 @@ class DbInjuryConfigure(DbBrowser):
 
     def get_injury_by_name(self, name: str) -> Injuries:
         query = select(Injuries).where(Injuries.name == name)
-        with self.session as s:
-            return s.exec(query).one()
+        return self.safe_select_one(query)
 
     def add_new_injury(self, name: str, penalties: dict[str, int]):
         query_inj = Injuries(name=name)
@@ -42,8 +41,9 @@ class DbInjuryConfigure(DbBrowser):
 
     def delete_injury(self, name: str | None = None):
         inj = select(Injuries).where(Injuries.name == name)
-        with self.session as s:
-            inj = s.exec(inj).one()
+        inj = self.safe_select_one(inj)
+        if not inj:
+            raise Exception(f"No injury with the name {name}")
         self.delete(inj)
 
     def edit_injury(
@@ -103,10 +103,9 @@ class DbInjuryConfigure(DbBrowser):
 
     def get_injury_by_no(self, no: int):
         query = select(Injuries).where(Injuries.no == no)
-        with self.session as s:
-            return s.exec(query).one()
+        return self.safe_select_one(query)
+    
 
     def view_all_injuries(self):
         query = select(Injuries).join(InjuryStat)
-        with self.session as s:
-            return s.exec(query).all()
+        return self.select_many(query)

@@ -17,23 +17,19 @@ class DbPreyConfig(DbBrowser):
         self.session.refresh(PreyTerritory)
 
     def get_all_prey(self):
-        with self.session as s:
-            return s.exec(select(Prey)).all()
+        return self.select_many(select(Prey))
 
     def get_prey_by_name(self, name: str) -> Prey:
         query = select(Prey).where(Prey.name == name)
-        with self.session as s:
-            return s.exec(query).one()
+        return self.safe_select_one(query)
 
     def get_prey_by_no(self, no: int) -> Prey:
         query = select(Prey).where(Prey.no == no)
-        with self.session as s:
-            return s.exec(query).one()
+        return self.safe_select_one(query)
 
     def get_prey_for_territory_no(self, terr_no: int | None):
         query = select(Prey).where(Prey.territory == terr_no)
-        with self.session as s:
-            return s.exec(query).all()
+        return self.select_many(query)
 
     def add_new_prey(self, params: dict[str, Any]):
         terr: str = params.get("territory")

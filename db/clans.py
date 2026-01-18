@@ -21,13 +21,11 @@ class DbClanConfig(DbBrowser):
 
     def get_clan_by_name(self, name: str) -> Clans:
         query = select(Clans).where(Clans.name == name.capitalize())
-        with self.session as s:
-            return s.exec(query).first()
+        return self.safe_select_one(query)
 
     def get_clan_by_no(self, no: int) -> Clans:
         query = select(Clans).where(Clans.no == no)
-        with self.session as s:
-            return s.exec(query).first()
+        return self.safe_select_one(query)
 
     def add_new_clan(self, params: dict[str, Any]):
         if params.get("is_true_clan"):
