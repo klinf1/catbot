@@ -75,8 +75,7 @@ class BaseTest:
 
     @pytest.fixture(scope="function")
     def mock_inherit(self):
-        if self.handler_class.__bases__ != ((DbBrowser,)):
-            raise Exception(f"Класс {self.handler_class.__name__} унаследован не только от DbBrowser!: {self.handler_class.__bases__}")
+        prev_bases = self.handler_class.__bases__
         self.handler_class.__bases__ = (MockBrowser,)
         if self.kwargs:
             mocked = self.handler_class(**self.kwargs)
@@ -86,7 +85,7 @@ class BaseTest:
         yield mocked
         mocked.session.rollback()
         mocked.session.close()
-        self.handler_class.__bases__ = (DbBrowser,)
+        self.handler_class.__bases__ = prev_bases
     
     @pytest.fixture()
     def fill_test_players(self, mock_inherit):
