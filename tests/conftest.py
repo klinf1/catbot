@@ -15,6 +15,15 @@ class FillData:
     cat_name_one_1 = 'cat_player_one'
     cat_name_one_2 = 'another_cat_player_one'
     cat_name_two_1 = 'cat_player_two'
+    players = [
+        dict(chat_id=player_w_2_cats, username="test_player"),
+        dict(chat_id=player_w_1_cat, username="test_player_2"),
+    ]
+    cats = [
+        dict(name=cat_name_one_1, player_chat_id=player_w_2_cats, hunting=1, age=10),
+        dict(name=cat_name_one_2, player_chat_id=player_w_2_cats, hunting=1, age=10),
+        dict(name=cat_name_two_1, player_chat_id=player_w_1_cat, hunting=1, age=10),
+    ]
     test_player = dict(chat_id=player_w_2_cats, username='test_player')
     test_player_2 = dict(chat_id=player_w_1_cat, username='test_player_2')
     test_cat_one_1 = dict(name=cat_name_one_1, player_chat_id=player_w_2_cats, hunting=1, age=10)
@@ -90,12 +99,14 @@ class BaseTest:
     @pytest.fixture()
     def fill_test_players(self, mock_inherit):
         handler = mock_inherit
-        handler.add_many([Players(**FillData.test_player), Players(**FillData.test_player_2)])
+        for i in FillData.players:
+            handler.add(Players(**i))
     
     @pytest.fixture()
     def fill_test_chars(self, mock_inherit):
         handler = mock_inherit
-        handler.add_many([Characters(**FillData.test_cat_one_1), Characters(**FillData.test_cat_one_2), Characters(**FillData.test_cat_two)])
+        for i in FillData.cats:
+            handler.add(Characters(**i))
     
     def compare(self, dbres: SQLModel | Iterable[SQLModel] | None, eta: SQLModel | Iterable[SQLModel] | None):
         """Method to compare instanses and/or Iterables of instanses of SQLModel class disregarding any primary key fields."""
