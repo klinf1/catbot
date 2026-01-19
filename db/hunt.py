@@ -70,7 +70,9 @@ class Hunt(DbBrowser):
                 ),  # noqa: E711
             )
         )
-        logger.debug(f"res = {self.select_many(query)}")
+        logger.debug(f"all_prey on clan = {self.select_many(query)}")
+        query = select(PreyTerritory)
+        logger.debug(f"all prey_terr links = {self.select_many(query)}")
 
     def get_prey(self) -> Prey | None:
         res = roll()
