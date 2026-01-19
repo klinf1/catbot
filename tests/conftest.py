@@ -5,16 +5,16 @@ from typing import Any, Iterable
 import pytest
 from sqlmodel import SQLModel, Session, func, select, create_engine
 
-from db import DbBrowser, Players, Characters, SQLModel as Tables
+from db import Clans, DbBrowser, Players, Characters, Prey, PreyTerritory, SQLModel as Tables
 
 
 @dataclass(frozen=True)
 class FillData:
     player_w_2_cats = 1
     player_w_1_cat = 2
-    cat_name_one_1 = "cat_player_one"
-    cat_name_one_2 = "another_cat_player_one"
-    cat_name_two_1 = "cat_player_two"
+    cat_name_one_1 = "Cat_player_one"
+    cat_name_one_2 = "Another_cat_player_one"
+    cat_name_two_1 = "Cat_player_two"
     players = [
         dict(chat_id=player_w_2_cats, username="test_player"),
         dict(chat_id=player_w_1_cat, username="test_player_2"),
@@ -28,11 +28,23 @@ class FillData:
     test_player_2 = dict(chat_id=player_w_1_cat, username="test_player_2")
     test_cat_one_1 = dict(name=cat_name_one_1, player_chat_id=player_w_2_cats, hunting=1, age=10)
     test_cat_one_2 = dict(name=cat_name_one_2, player_chat_id=player_w_2_cats, hunting=1, age=10)
-    test_cat_two = dict(name=cat_name_two_1, player_chat_id=player_w_1_cat, hunting=1, age=10)
+    test_cat_two = dict(name=cat_name_two_1, player_chat_id=player_w_1_cat, hunting=10, age=10)
+    prey = [
+        dict(name="Test_prey_ez", stat="agility", amount="1", rarity=100, sum_required=1),
+        dict(name="Test_prey_hard", stat="agility", amount="1", rarity=100, sum_required=5),
+    ]
+    clan_prey = [
+        dict(name="Test_prey_ez_c", stat="agility", amount="1", rarity=100, sum_required=1),
+        dict(name="Test_prey_hard_c", stat="agility", amount="1", rarity=100, sum_required=5),
+    ]
+    clan = dict(name="Test_clan", is_true_clan=True)
+    terr = dict(name="Test_terr")
+
+
+engine = create_engine("sqlite:///:memory:")
 
 
 def _create_memory_bd():
-    engine = create_engine("sqlite:///:memory:")
     with engine.connect() as c:
         cur = c.connection.cursor()
         cur.execute("PRAGMA foreign_keys = ON;")
@@ -77,13 +89,18 @@ class MockBrowser(DbBrowser):
 
 
 class BaseTest:
-    handler_class: type[DbBrowser]
+    handler_class: type[DbBrowser] | Iterable[type[DbBrowser]]
     kwargs: dict[str, Any]
+    supp_classes: Iterable[type[DbBrowser]] | None = None
 
     @pytest.fixture(scope="function")
-    def mock_inherit(self):
+    def mock_inherit(self, mocker):
+        mocker.patch("db.engine", engine)
         prev_bases = self.handler_class.__bases__
         self.handler_class.__bases__ = (MockBrowser,)
+        if self.supp_classes:
+            for i in self.supp_classes:
+                i.__bases__ = (MockBrowser,)
         if self.kwargs:
             mocked = self.handler_class(**self.kwargs)
         else:
@@ -93,6 +110,9 @@ class BaseTest:
         mocked.session.rollback()
         mocked.session.close()
         self.handler_class.__bases__ = prev_bases
+        if self.supp_classes:
+            for i in self.supp_classes:
+                i.__bases__ = (DbBrowser,)
 
     @pytest.fixture()
     def fill_test_players(self, mock_inherit):
@@ -105,6 +125,26 @@ class BaseTest:
         handler = mock_inherit
         for i in FillData.cats:
             handler.add(Characters(**i))
+
+    @pytest.fixture()
+    def fill_test_prey(self, mock_inherit):
+        handler = mock_inherit
+        for i in FillData.prey:
+            handler.add(Prey(**i))
+
+    @pytest.fixture()
+    def fill_test_lands(self, mock_inherit):
+        handler = mock_inherit
+        for i in [FillData.clan, FillData.terr]:
+            handler.add(Clans(**i))
+
+    @pytest.fixture()
+    def fill_prey_terr(self, mock_inherit):
+        handler = mock_inherit
+        for i in FillData.clan_prey:
+            handler.add(Prey(**i))
+        handler.add(PreyTerritory(prey=3, territory=1))
+        handler.add(PreyTerritory(prey=4, territory=2))
 
     def compare(
         self,
