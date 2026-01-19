@@ -22,18 +22,19 @@ class Hunt(DbBrowser):
     char: Characters
     clan: Clans | None
     session: Session
+    settings: dict[str, str]
 
     def __init__(self, char_name: str, territory: str) -> None:
         super().__init__()
         self.territory = territory
         self.char_name = char_name
+        self.char_config = DbCharacterConfig(admin="db/hunt")
+
+    def hunt(self) -> tuple[Prey | None, bool]:
         self.char = self.get_char()
         self.clan = self.get_clan()
         self.prey = self.get_prey()
         self.settings = self.get_setting("hunt_attempts")
-        self.char_config = DbCharacterConfig()
-
-    def hunt(self) -> tuple[Prey | None, bool]:
         self.validate_char()
         res = self.check_success()
         self.char_config.edit_character(
