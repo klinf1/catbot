@@ -92,11 +92,7 @@ class Hunt(DbBrowser):
                     Prey.rarity + mod >= res,
                     or_(
                         PreyTerritory.territory == self.clan.no,
-                        select(PreyTerritory)  # noqa: E712
-                        .join(Prey)  # noqa: E712
-                        .where(PreyTerritory.prey == Prey.no)  # noqa: E712
-                        .exists()  # noqa: E712
-                        == False,  # noqa: E712
+                        Prey.no.not_in(select(PreyTerritory.prey)),  # noqa: E712
                     ),  # noqa: E711
                 )
             )
