@@ -171,7 +171,7 @@ class HuntTerrChoice(CallbackBase):
 
     async def hunt(self):
         active_user = self.context.user_data["state"]["args"]["user"]
-        cat = self.context.user_data["state"]["args"]["cat"]
+        cat = self.context.user_data["state"]["args"]["cat"].strip().capitalize()
         terr = int(self.query_data)
         del self.context.user_data["state"]
         if self.user.id != active_user:

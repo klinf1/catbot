@@ -26,7 +26,7 @@ class Hunt(DbBrowser):
     def __init__(self, char_name: str, territory: str) -> None:
         super().__init__()
         self.territory = territory
-        self.char_name = char_name.strip().capitalize()
+        self.char_name = char_name
         self.char = self.get_char()
         self.clan = self.get_clan()
         self.prey = self.get_prey()
