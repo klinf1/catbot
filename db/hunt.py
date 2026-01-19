@@ -55,28 +55,8 @@ class Hunt(DbBrowser):
         if self.char.curr_hunts >= int(self.settings.get("hunt_attempts")):
             raise TooMuchHuntingError
 
-    def _debug_prey(self):
-        query = (
-            select(Prey)
-            .join(PreyTerritory, isouter=True)
-            .where(
-                or_(
-                    PreyTerritory.territory == self.clan.no,
-                    select(PreyTerritory)  # noqa: E712
-                    .join(Prey)  # noqa: E712
-                    .where(PreyTerritory.prey == Prey.no)  # noqa: E712
-                    .exists()  # noqa: E712
-                    == False,  # noqa: E712
-                ),  # noqa: E711
-            )
-        )
-        logger.debug(f"all_prey on clan = {self.select_many(query)}")
-        query = select(PreyTerritory)
-        logger.debug(f"all prey_terr links = {self.select_many(query)}")
-
     def get_prey(self) -> Prey | None:
         res = roll()
-        self._debug_prey()
         logger.debug(f"roll result for hunt: {res}")
         season = self.get_curr_season()
         if not season:
@@ -97,7 +77,6 @@ class Hunt(DbBrowser):
                 )
             )
         )
-        logger.debug(query)
         poss_prey = self.select_many(query)
         logger.debug(f"Список возможной дичи {poss_prey}")
         try:
