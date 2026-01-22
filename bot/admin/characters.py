@@ -104,7 +104,7 @@ class CharacterCommandHandler(CommandBase):
         if "\n" in self.text:
             name, reason = self.text.split("\n")
         else:
-            await self.bot.send_message(self.chat_id, "Пожалуйста, укажите причину воскрешения")
+            await self.bot.send_message(self.chat_id, "Пожалуйста, укажите причину разморозки")
             return
         self.char_config.edit_freeze_char_by_name(name.strip().capitalize(), reason.strip(), False)
         await self.bot.send_message(
