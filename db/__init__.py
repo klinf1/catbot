@@ -650,6 +650,7 @@ class Characters(SQLModel, table=True):
                 f"Клан: {clan}",
                 f"Роль: {role}",
                 f"Степень голода: {self.hunger}",
+                f"Количество охот в текущем сезоне: {self.curr_hunts}",
                 f"Заморожен: {'да' if self.is_frozen else 'нет'}",
             ]
         )
