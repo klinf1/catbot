@@ -160,6 +160,7 @@ class PileConv(CallbackBase):
                 self.pile.get_from_pile(char.clan_no, prey)
                 await self.bot.send_message(self.chat_id, self.nom.eat(char, prey))
             case "take":
+                self.pile.get_from_pile(char.clan_no, prey)
                 await self.bot.send_message(self.chat_id, self.inv.add_item(char.no, "prey", prey.no))
         del self.context.user_data["state"]
 
