@@ -88,7 +88,11 @@ class PreyCommandHandler(CommandBase):
         )
 
     async def reset_prey_territories(self):
-        name, terr = self.text.strip().split("\n")
+        if "\n" in self.text:
+            name, terr = self.text.strip().split("\n")
+        else:
+            name = self.text.strip().capitalize()
+            terr = ""
         prey = self.prey_db.get_prey_by_name(name)
         self.prey_db.reset_territories(prey, terr)
         prey = self.prey_db.get_prey_by_name(name)
