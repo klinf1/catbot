@@ -174,12 +174,13 @@ class HuntTerrChoice(CallbackBase):
         active_user = self.context.user_data["state"]["args"]["user"]
         cat = self.context.user_data["state"]["args"]["cat"].strip().capitalize()
         terr = int(self.query_data)
+        hunter = Hunt(cat, terr)
         del self.context.user_data["state"]
         if self.user.id != active_user:
             return
         try:
             main_logger.debug(f"Начало охоты для {self.user.username} {cat} на территории номер {terr}")
-            prey, success = Hunt(cat, terr).hunt()
+            prey, success = hunter.hunt()
         except CharacterDeadException:
             await self.context.bot.send_message(self.chat_id, "Этот персонаж мертв!")
             main_logger.info(f"Охота с мертвым персонажем: {self.user.username}")
@@ -197,6 +198,7 @@ class HuntTerrChoice(CallbackBase):
         except Exception as err:
             main_logger.error(f"{err} {traceback.format_exc()}")
         else:
+            await self.bot.send_message(self.chat_id, hunter.get_curr_hunts_message())
             if success and prey:
                 await self.context.bot.send_message(
                     self.chat_id,

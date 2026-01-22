@@ -124,3 +124,11 @@ class Hunt(DbBrowser):
                 DbInjuryCharacter(self.char.no, self.prey.injury).add_injury()
             except IntegrityError:
                 logger.debug(f"Повторное ранение {self.prey.injury} для {self.char.name}, игнорирую")
+
+    def get_curr_hunts_message(self) -> str:
+        res = self.get_char()
+        max = self.settings.get("hunt_attempts")
+        text = (
+            f"Текущее количество охот для персонажа {res.name}  в этом сезоне = {res.curr_hunts}.\nМаксимальное = {max}"
+        )
+        return text
