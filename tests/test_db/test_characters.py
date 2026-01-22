@@ -116,3 +116,9 @@ class TestConfig(CharacterBase):
         handler.edit_death_char_by_name(FillData.cat_name_one_1, "test", flag)
         res = handler.get_char_by_name(FillData.cat_name_one_1)
         assert res.is_dead == flag
+
+    def test_set_curr_hunts(self, mock_inherit, fill_test_players, fill_test_chars):
+        handler = mock_inherit
+        handler.set_curr_hunts(FillData.cat_name_one_1, 4, "test")
+        res = handler.get_char_by_name(FillData.cat_name_one_1)
+        assert res.curr_hunts == 4

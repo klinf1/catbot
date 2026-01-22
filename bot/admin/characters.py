@@ -148,3 +148,42 @@ class CharacterCommandHandler(CommandBase):
             await self.view_list_from_db(hist)
         except CharNotFound:
             await self.bot.send_message(self.chat_id, f"Персонаж с именем {name} не найден.")
+
+    async def set_hunt_attempts(self):
+        def validate_new(val: str) -> int | Exception:
+            try:
+                new = int(val)
+                if new < 0:
+                    return Exception("Новое число должно быть больше 0")
+                return new
+            except ValueError:
+                return Exception("Новое число должно быть целым.")
+            except Exception as err:
+                main_logger.error(f"Ошибка установки количества охот: {err}")
+                raise
+
+        if "\n" in self.text:
+            cat, params = self.text.split("\n", 1)
+        else:
+            self.bot.send_message(
+                self.chat_id,
+                "Не все параметры указаны: необходимо передать новое значение (опционально) и причину изменений!",
+            )
+            return
+        d_params = {"new": 0}
+        for param in params.split("\n"):
+            key, val = param.split(":")
+            if key.lower() == "reason":
+                d_params["reason"] = val
+            elif key.lower() == "new":
+                if isinstance(new := validate_new(val), Exception):
+                    await self.bot.send_message(self.chat_id, new.args[0])
+                    return
+                d_params["new"] = new
+        try:
+            self.char_config.set_curr_hunts(cat.capitalize(), d_params["new"], d_params["reason"])
+        except CharNotFound as err:
+            await self.bot.send_message(self.chat_id, err.tg_answer)
+            return
+        await self.bot.send_message(self.chat_id, f"Новое количество охот персонажу {cat} успешно задано.")
+        main_logger.debug(f"Установлено новое количество охот для {cat} = {d_params['new']}")

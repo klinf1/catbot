@@ -44,4 +44,4 @@ class TooMuchHuntingError(Exception):
 
 
 class CharNotFound(Exception):
-    pass
+    tg_answer = "Персонаж не найден!"

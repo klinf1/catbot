@@ -1,6 +1,6 @@
-from typing import Any
+from typing import Any, Literal
 
-from sqlmodel import Session, and_, select
+from sqlmodel import and_, select
 
 from db import Characters, CharacterHistory, DbBrowser
 from db.clans import DbClanConfig
@@ -8,8 +8,6 @@ from exceptions import CharNotFound, NotRealClanError
 
 
 class DbCharacterUser(DbBrowser):
-    session: Session
-
     def __init__(self, chat_id: int) -> None:
         super().__init__()
         self.chat_id = chat_id
@@ -24,13 +22,11 @@ class DbCharacterUser(DbBrowser):
 
 
 class DbCharacterConfig(DbBrowser):
-    session: Session
-
     def __init__(self, admin: str | None = "") -> None:
         super().__init__()
         self.admin = admin
 
-    def get_char_by_name(self, name: str):
+    def get_char_by_name(self, name: str) -> Characters | None:
         query = select(Characters).where(Characters.name == name)
         return self.safe_select_one(query)
 
@@ -122,3 +118,10 @@ class DbCharacterConfig(DbBrowser):
     def get_admin_history(self, admin: str) -> list[CharacterHistory]:
         query = select(CharacterHistory).where(CharacterHistory.user == admin)
         return self.select_many(query)
+
+    def set_curr_hunts(self, name: str, new: int, reason: str) -> Literal[True]:
+        char = self.get_char_by_name(name)
+        if not char:
+            raise CharNotFound
+        self.edit_character(char.name, {"curr_hunts": new}, reason)
+        return True
