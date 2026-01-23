@@ -4,6 +4,7 @@ from sqlmodel import Session, and_, select
 
 from db import Clans, DbBrowser, Prey, PreyTerritory
 from db.clans import DbClanConfig
+from logs.logs import main_logger as logger
 
 
 class DbPreyConfig(DbBrowser):
@@ -44,8 +45,12 @@ class DbPreyConfig(DbBrowser):
                     j = DbClanConfig().get_clan_by_name(i.strip().capitalize())
                     territories.append(j.no)
             del params["territory"]
-        new_prey = Prey(**params)
-        self.add(new_prey)
+        try:
+            new_prey = Prey(**params)
+            self.add(new_prey)
+        except LookupError as err:
+            logger.error(f"Ошибка добавления дичи: {err}")
+            raise
         added_prey: Prey = self.select_one(select(Prey).where(Prey.name == new_prey.name))
         for i in territories:
             new_terr_link = PreyTerritory(prey=added_prey.no, territory=i)

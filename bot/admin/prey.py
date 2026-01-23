@@ -5,6 +5,7 @@ from bot.command_base import CommandBase
 from db import Prey
 from db.clans import DbClanConfig
 from db.prey import DbPreyConfig
+from logs.logs import main_logger
 from utils import prepare_for_db
 
 
@@ -23,8 +24,15 @@ class PreyCommandHandler(CommandBase):
             col, value = prepare_for_db(item.strip().split(":", 1))
             if col and value and (col in Prey.attrs() or (col + "*") in Prey.attrs()):  # TODO: убрать ебучий костыль
                 params_dict.update({col.strip(): value.strip()})
-        self.prey_db.add_new_prey(params_dict)
-        await self.context.bot.send_message(self.chat_id, f"Дичь {name} добавлена успешно!")
+        try:
+            self.prey_db.add_new_prey(params_dict)
+        except LookupError:
+            await self.context.bot.send_message(self.chat_id, f"Стат {params_dict.get('stat')} не подходит для дичи.")
+        except Exception as err:
+            main_logger.error(f"Error adding prey {err}")
+            await self.bot.send_message(self.chat_id, "Ошибка добавления дичи. Проверьте параметры.")
+        else:
+            await self.context.bot.send_message(self.chat_id, f"Дичь {name} добавлена успешно!")
 
     async def add_prey_help(self):
         attrs = "\n".join(Prey.attrs())
