@@ -498,6 +498,11 @@ class Characters(SQLModel, table=True):
         CheckConstraint(faith.sa_column <= 10),
     )
 
+    @field_validator("name", mode="after")
+    @classmethod
+    def validate_name(cls, val: str):
+        return val.strip()
+
     @property
     def session(self):
         return Session(engine)
