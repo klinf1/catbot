@@ -2,10 +2,10 @@ from __future__ import annotations
 import os
 
 from datetime import datetime
-from typing import Any, ClassVar, Iterable
+from typing import Any, ClassVar, Iterable, Annotated
 
 from dotenv import load_dotenv
-from pydantic import computed_field, field_validator
+from pydantic import computed_field, field_validator, AfterValidator
 from sqlalchemy.ext.asyncio.engine import create_async_engine
 from sqlmodel import (
     CheckConstraint,
@@ -31,6 +31,10 @@ engine = create_engine(f"sqlite:///{os.getenv('DB_PATH', 'cats.db')}")
 as_engine = create_async_engine(f"sqlite+aiosqlite:///{os.getenv('DB_PATH', 'cats.db')}")
 
 
+def validate_name(val: str) -> str:
+    return val.strip()
+
+
 class Buffs(SQLModel, table=True):
     """
     Table for any buffs the cats might receive.
@@ -39,7 +43,7 @@ class Buffs(SQLModel, table=True):
     """
 
     no: int | None = Field(primary_key=True, default=None, index=True)
-    name: str
+    name: Annotated[str, AfterValidator(validate_name)]
 
 
 class BuffsStats(SQLModel, table=True):
@@ -144,7 +148,7 @@ class Seasons(SQLModel, table=True):
 
     __table_args__ = (UniqueConstraint("name", name="seasons_name_unique"),)
     no: int | None = Field(primary_key=True, default=None, index=True)
-    name: str = Field(index=True)
+    name: Annotated[str, AfterValidator(validate_name)] = Field(index=True)
     hunt_mod: int
     herb_mod: int
     is_active: bool = False
@@ -175,7 +179,7 @@ class Clans(SQLModel, table=True):
 
     __table_args__ = (UniqueConstraint("name", name="clans_name_unique"),)
     no: int | None = Field(primary_key=True, default=None, index=True)
-    name: str = Field(index=True)
+    name: Annotated[str, AfterValidator(validate_name)] = Field(index=True)
     leader: int | None = Field(default=None, nullable=True)
     is_true_clan: bool = Field(default=False, nullable=False)
 
@@ -238,7 +242,7 @@ class Herbs(SQLModel, table=True):
 
     __table_args__ = (UniqueConstraint("name", name="herbs_name_unique"),)
     no: int | None = Field(primary_key=True, default=None, index=True)
-    name: str = Field(index=True)
+    name: Annotated[str, AfterValidator(validate_name)] = Field(index=True)
     territory: int | None = Field(foreign_key="clans.no", default=None, ondelete="SET NULL")
     sum_required: int = 0
     rarity_min: int
@@ -335,7 +339,7 @@ class Roles(SQLModel, table=True):
 
     __table_args__ = (UniqueConstraint("name", name="roles_name_unique"),)
     no: int | None = Field(primary_key=True, default=None, index=True)
-    name: str = Field(index=True)
+    name: Annotated[str, AfterValidator(validate_name)] = Field(index=True)
     is_senior: bool = False
     food_required: int
 
@@ -446,7 +450,7 @@ class DisabilityStat(SQLModel, table=True):
 
 class Characters(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
-    name: str = Field(index=True)
+    name: Annotated[str, AfterValidator(validate_name)] = Field(index=True)
     player_chat_id: int = Field(foreign_key="players.chat_id", ondelete="CASCADE")
     hunting: int = Field(default=0, sa_column=Column(Integer, default=0))
     agility: int = Field(default=0, sa_column=Column(Integer, default=0))
@@ -497,11 +501,6 @@ class Characters(SQLModel, table=True):
         CheckConstraint(faith.sa_column >= 0),
         CheckConstraint(faith.sa_column <= 10),
     )
-
-    @field_validator("name", mode="after")
-    @classmethod
-    def validate_name(cls, val: str):
-        return val.strip()
 
     @property
     def session(self):
@@ -669,7 +668,7 @@ class PreyTerritory(SQLModel, table=True):
 
 class Prey(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
-    name: str = Field(index=True)
+    name: Annotated[str, AfterValidator(validate_name)] = Field(index=True)
     stat: PreyStats
     amount: int
     rarity: int = Field(sa_column=Column(Integer, nullable=False))
@@ -743,7 +742,7 @@ class PreyPile(SQLModel, table=True):
 
 class Ages(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
-    name: str
+    name: Annotated[str, AfterValidator(validate_name)]
     max_age: int
     food_req: int
     next: str | None = None
@@ -764,7 +763,7 @@ class Ages(SQLModel, table=True):
 
 class Settings(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
-    name: str
+    name: Annotated[str, AfterValidator(validate_name)]
     value: str
     __table_args__ = (UniqueConstraint("name", name="setting_name_unique"),)
 
