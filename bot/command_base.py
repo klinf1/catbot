@@ -91,6 +91,18 @@ class CommandBase:
             return False
         return True
 
+    def strip_split(self, val: str, sym: str, times: int = -1) -> list[str]:
+        new = val.split(sym, times)
+        new = [i.strip() for i in new]
+        return new
+
+    def strip_cap(self, val: str) -> str:
+        return val.strip().capitalize()
+
+    def name_params(self, sym: str):
+        name, params = self.strip_split(self.text, sym, 1)
+        return name.capitalize(), params
+
 
 class CallbackBase:
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
