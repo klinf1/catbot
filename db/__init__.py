@@ -21,6 +21,7 @@ from sqlmodel import (
 )
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel.sql.expression import SelectOfScalar
+from db.validators import validate_name, validate_percent, validate_negative, validate_positive, validate_stat
 from db.table_data import AGES, CLANS, SEASONS, SETTINGS
 from db.utils import PreyStats
 from logs.logs import main_logger as logger
@@ -29,10 +30,6 @@ load_dotenv()
 
 engine = create_engine(f"sqlite:///{os.getenv('DB_PATH', 'cats.db')}")
 as_engine = create_async_engine(f"sqlite+aiosqlite:///{os.getenv('DB_PATH', 'cats.db')}")
-
-
-def validate_name(val: str) -> str:
-    return val.strip()
 
 
 class Buffs(SQLModel, table=True):
@@ -58,7 +55,7 @@ class BuffsStats(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None)
     buff: int = Field(foreign_key="buffs.no", ondelete="CASCADE")
     stat: str
-    increase: int = Field(sa_column=Column(Integer))
+    increase: Annotated[int, AfterValidator(validate_positive)] = Field(sa_column=Column(Integer))
     __table_args__ = (CheckConstraint(increase.sa_column > 0),)
 
 
@@ -382,7 +379,7 @@ class InjuryStat(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None)
     issue: int = Field(foreign_key="injuries.no", ondelete="CASCADE")
     stat: str
-    penalty: int = Field(sa_column=Column(Integer))
+    penalty: Annotated[int, AfterValidator(validate_negative)] = Field(sa_column=Column(Integer))
     __table_args__ = (CheckConstraint(penalty.sa_column < 0),)
 
     @staticmethod
@@ -423,7 +420,7 @@ class DiseaseStat(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None)
     issue: int = Field(foreign_key="diseases.no", ondelete="CASCADE")
     stat: str
-    penalty: int = Field(sa_column=Column(Integer))
+    penalty: Annotated[int, AfterValidator(validate_negative)] = Field(sa_column=Column(Integer))
     __table_args__ = (CheckConstraint(penalty.sa_column < 0),)
 
 
@@ -444,7 +441,7 @@ class DisabilityStat(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None)
     issue: int = Field(foreign_key="disabilities.no", ondelete="CASCADE")
     stat: str
-    penalty: int = Field(sa_column=Column(Integer))
+    penalty: Annotated[int, AfterValidator(validate_negative)] = Field(sa_column=Column(Integer))
     __table_args__ = (CheckConstraint(penalty.sa_column < 0),)
 
 
@@ -452,18 +449,18 @@ class Characters(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
     name: Annotated[str, AfterValidator(validate_name)] = Field(index=True)
     player_chat_id: int = Field(foreign_key="players.chat_id", ondelete="CASCADE")
-    hunting: int = Field(default=0, sa_column=Column(Integer, default=0))
-    agility: int = Field(default=0, sa_column=Column(Integer, default=0))
-    hearing: int = Field(default=0, sa_column=Column(Integer, default=0))
-    smell: int = Field(default=0, sa_column=Column(Integer, default=0))
-    sight: int = Field(default=0, sa_column=Column(Integer, default=0))
-    speed: int = Field(default=0, sa_column=Column(Integer, default=0))
-    stamina: int = Field(default=0, sa_column=Column(Integer, default=0))
-    strength: int = Field(default=0, sa_column=Column(Integer, default=0))
-    combat: int = Field(default=0, sa_column=Column(Integer, default=0))
-    herbalism: int = Field(default=0, sa_column=Column(Integer, default=0))
-    healing: int = Field(default=0, sa_column=Column(Integer, default=0))
-    faith: int = Field(default=0, sa_column=Column(Integer, default=0))
+    hunting: Annotated[int, AfterValidator(validate_stat)] = Field(default=0, sa_column=Column(Integer, default=0))
+    agility: Annotated[int, AfterValidator(validate_stat)] = Field(default=0, sa_column=Column(Integer, default=0))
+    hearing: Annotated[int, AfterValidator(validate_stat)] = Field(default=0, sa_column=Column(Integer, default=0))
+    smell: Annotated[int, AfterValidator(validate_stat)] = Field(default=0, sa_column=Column(Integer, default=0))
+    sight: Annotated[int, AfterValidator(validate_stat)] = Field(default=0, sa_column=Column(Integer, default=0))
+    speed: Annotated[int, AfterValidator(validate_stat)] = Field(default=0, sa_column=Column(Integer, default=0))
+    stamina: Annotated[int, AfterValidator(validate_stat)] = Field(default=0, sa_column=Column(Integer, default=0))
+    strength: Annotated[int, AfterValidator(validate_stat)] = Field(default=0, sa_column=Column(Integer, default=0))
+    combat: Annotated[int, AfterValidator(validate_stat)] = Field(default=0, sa_column=Column(Integer, default=0))
+    herbalism: Annotated[int, AfterValidator(validate_stat)] = Field(default=0, sa_column=Column(Integer, default=0))
+    healing: Annotated[int, AfterValidator(validate_stat)] = Field(default=0, sa_column=Column(Integer, default=0))
+    faith: Annotated[int, AfterValidator(validate_stat)] = Field(default=0, sa_column=Column(Integer, default=0))
     role: int | None = Field(default=None, foreign_key="roles.no", ondelete="SET NULL")
     clan_no: int | None = Field(default=None, foreign_key="clans.no", ondelete="SET NULL")
     hunger: int = 0
@@ -671,10 +668,12 @@ class Prey(SQLModel, table=True):
     name: Annotated[str, AfterValidator(validate_name)] = Field(index=True)
     stat: PreyStats
     amount: int
-    rarity: int = Field(sa_column=Column(Integer, nullable=False))
+    rarity: Annotated[int, AfterValidator(validate_percent)] = Field(sa_column=Column(Integer, nullable=False))
     sum_required: int = Field(sa_column=Column(Integer, nullable=False))
     injury: int | None = Field(default=None, foreign_key="injuries.no", ondelete="SET NULL")
-    injury_chance: int = Field(default=0, sa_column=Column(Integer, default=0))
+    injury_chance: Annotated[int, AfterValidator(validate_percent)] = Field(
+        default=0, sa_column=Column(Integer, default=0)
+    )
     __table_args__ = (
         UniqueConstraint("name", name="prey_name_unique"),
         CheckConstraint(injury_chance.sa_column >= 0),
@@ -683,6 +682,15 @@ class Prey(SQLModel, table=True):
         CheckConstraint(rarity.sa_column > 0),
         CheckConstraint(rarity.sa_column <= 100),
     )
+
+    @field_validator("stat", mode="after")
+    @classmethod
+    def validate_stat(cls, val: str) -> str:
+        try:
+            PreyStats(val)
+        except ValueError:
+            raise ValueError(f"Указанный стат {val} не подходит для дичи.")
+        return val
 
     @staticmethod
     def attrs():
@@ -737,7 +745,7 @@ class PreyPile(SQLModel, table=True):
     no: int | None = Field(primary_key=True, default=None, index=True)
     clan: int = Field(foreign_key="clans.no", ondelete="CASCADE")
     prey: int = Field(foreign_key="prey.no", ondelete="CASCADE")
-    date_added: datetime = Field(default=datetime.now())
+    date_added: datetime = Field(default_factory=datetime.now)
 
 
 class Ages(SQLModel, table=True):
