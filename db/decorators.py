@@ -22,11 +22,12 @@ def not_banned(func):
 def superuser_command(func):
     def wrapper(self, *args, **kwargs):
         tg_user = self.user
+        tg_chat = self.chat_id
         query = select(Players).where(Players.chat_id == tg_user.id)
         with Session(engine) as s:
             user = s.exec(query).one()
         if user.is_superuser is False:
-            self.context.chat_data.update({"exc": {"superuser_error": [user.chat_id, user.username]}})
+            self.context.chat_data.update({"exc": {"superuser_error": [tg_chat, user.username]}})
             raise NoRightException("No rights!")
         return func(self, *args, **kwargs)
 
