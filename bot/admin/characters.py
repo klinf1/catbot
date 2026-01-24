@@ -20,8 +20,8 @@ class CharacterCommandHandler(CommandBase):
 
     async def add_char(self):
         params_dict = {}
-        name, params_str = self.text.strip().split("\n", 1)
-        params_list = params_str.strip().split("\n")
+        name, params_str = self.name_params("\n")
+        params_list = self.strip_split(params_str, "\n")
         name = name.strip().capitalize()
         for item in params_list:
             col, val = prepare_for_db(item.strip().split(":", 1))
@@ -68,15 +68,15 @@ class CharacterCommandHandler(CommandBase):
 
     async def edit_char(self):
         params_dict = {}
-        name, params_str = self.text.strip().split("\n", 1)
-        params_list = params_str.strip().split("\n")
+        name, params_str = self.name_params("\n")
+        params_list = self.strip_split(params_str, "\n")
         reason = ""
         for item in params_list:
             col, val = prepare_for_db(item.strip().split(":", 1))
             if col and val and col in Characters.attrs():
                 params_dict.update({col: val})
             if col.lower() == "name":
-                params_dict.update({col: val.strip().capitalize()})
+                params_dict.update({col: self.strip_cap(val)})
             if col == "reason":
                 reason = val
         # params_dict.update({"name": name.capitalize()})
@@ -84,19 +84,19 @@ class CharacterCommandHandler(CommandBase):
             await self.bot.send_message(self.chat_id, "Пожалуйста, укажите причину изменения характеристик")
             return
         try:
-            self.char_config.edit_character(name.capitalize(), params_dict, reason)
-            new_char = self.char_config.get_char_by_name(params_dict.get("name") or name.capitalize())
+            self.char_config.edit_character(name, params_dict, reason)
+            new_char = self.char_config.get_char_by_name(params_dict.get("name") or name)
             await self.context.bot.send_message(self.chat_id, str(new_char))
         except NotRealClanError:
             await self.bot.send_message(self.chat_id, f"Не найден клан {params_dict['clan_no']}")
 
     async def freeze(self):
         if "\n" in self.text:
-            name, reason = self.text.split("\n")
+            name, reason = self.name_params("\n")
         else:
             await self.bot.send_message(self.chat_id, "Пожалуйста, укажите причину заморозки")
             return
-        self.char_config.edit_freeze_char_by_name(name.strip().capitalize(), reason.strip())
+        self.char_config.edit_freeze_char_by_name(name, reason.strip())
         await self.bot.send_message(
             self.chat_id,
             f"Персонаж {name} заморожен.",
@@ -105,11 +105,11 @@ class CharacterCommandHandler(CommandBase):
 
     async def unfreeze(self):
         if "\n" in self.text:
-            name, reason = self.text.split("\n")
+            name, reason = self.name_params("\n")
         else:
             await self.bot.send_message(self.chat_id, "Пожалуйста, укажите причину разморозки")
             return
-        self.char_config.edit_freeze_char_by_name(name.strip().capitalize(), reason.strip(), False)
+        self.char_config.edit_freeze_char_by_name(name, reason.strip(), False)
         await self.bot.send_message(
             self.chat_id,
             f"Персонаж {name} разморожен.",
@@ -119,11 +119,11 @@ class CharacterCommandHandler(CommandBase):
     @superuser_command
     async def kill(self):
         if "\n" in self.text:
-            name, reason = self.text.split("\n")
+            name, reason = self.name_params("\n")
         else:
             await self.bot.send_message(self.chat_id, "Пожалуйста, укажите причину убийства")
             return
-        self.char_config.edit_death_char_by_name(name.capitalize().strip(), reason, True)
+        self.char_config.edit_death_char_by_name(name, reason, True)
         await self.bot.send_message(
             self.chat_id,
             f"Персонаж {name} убит.",
@@ -133,11 +133,11 @@ class CharacterCommandHandler(CommandBase):
     @superuser_command
     async def resurrect(self):
         if "\n" in self.text:
-            name, reason = self.text.split("\n")
+            name, reason = self.name_params("\n")
         else:
             await self.bot.send_message(self.chat_id, "Пожалуйста, укажите причину воскрешения")
             return
-        self.char_config.edit_death_char_by_name(name.capitalize().strip(), reason, False)
+        self.char_config.edit_death_char_by_name(name, reason, False)
         await self.bot.send_message(
             self.chat_id,
             f"Персонаж {name} воскрешен.",
