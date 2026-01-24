@@ -29,7 +29,7 @@ class ClanCommandHandler(CommandBase):
         if not name:
             await self.bot.send_message(self.chat_id, "Вы не указали название клана!")
             return
-        params_dict.update({"name": name.capitalize()})
+        params_dict.update({"name": name.capitalize().strip()})
 
         self.clan_db.add_new_clan(params_dict)
         if "is_true_clan" in params_dict.keys() and params_dict.get("is_true_clan"):
@@ -63,18 +63,18 @@ class ClanCommandHandler(CommandBase):
             await self.bot.send_message(self.chat_id, "Территорий еще нет :(")
 
     async def delete_clan(self):
-        clan_name = self.text.capitalize()
+        clan_name = self.text.capitalize().strip()
         clan = self.clan_db.get_clan_by_name(clan_name)
         self.clan_db.delete_clan_by_no(clan.no)
         await self.bot.send_message(self.chat_id, f"Клан или территория {clan.name} удалена успешно.")
 
     async def appoint_leader(self):
         leader, clan_name = self.text.split("\n", 1)
-        char = self.char_db.get_char_by_name(leader.strip())
+        char = self.char_db.get_char_by_name(leader.strip().capitalize())
         if not char:
             await self.bot.send_message(self.chat_id, f"Персонаж с именем {leader} не найден.")
             return
-        clan = self.clan_db.get_real_clan(clan_name.strip())
+        clan = self.clan_db.get_real_clan(clan_name.strip().capitalize())
         if not clan:
             await self.bot.send_message(self.chat_id, f"Клан под названием {clan_name} не найден.")
             return

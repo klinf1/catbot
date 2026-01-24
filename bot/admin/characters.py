@@ -22,6 +22,7 @@ class CharacterCommandHandler(CommandBase):
         params_dict = {}
         name, params_str = self.text.strip().split("\n", 1)
         params_list = params_str.strip().split("\n")
+        name = name.strip().capitalize()
         for item in params_list:
             col, val = prepare_for_db(item.strip().split(":", 1))
             if col and val and col in Characters.attrs() or col + "*" in Characters.attrs():
@@ -72,8 +73,10 @@ class CharacterCommandHandler(CommandBase):
         reason = ""
         for item in params_list:
             col, val = prepare_for_db(item.strip().split(":", 1))
-            if col and val and col in Characters.attrs() or col.lower() == "name":
+            if col and val and col in Characters.attrs():
                 params_dict.update({col: val})
+            if col.lower() == "name":
+                params_dict.update({col: val.strip().capitalize()})
             if col == "reason":
                 reason = val
         # params_dict.update({"name": name.capitalize()})

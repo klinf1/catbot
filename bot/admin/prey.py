@@ -19,7 +19,7 @@ class PreyCommandHandler(CommandBase):
         params_dict = {}
         name, params_str = self.text.strip().split("\n", 1)
         params_list = params_str.strip().split("\n")
-        params_dict.update({"name": name.capitalize()})
+        params_dict.update({"name": name.capitalize().strip()})
         for item in params_list:
             col, value = prepare_for_db(item.strip().split(":", 1))
             if col and value and (col in Prey.attrs() or (col + "*") in Prey.attrs()):  # TODO: убрать ебучий костыль
@@ -78,7 +78,7 @@ class PreyCommandHandler(CommandBase):
     async def new_prey_territory(self):
         name, terr = self.text.strip().split("\n")
         prey = self.prey_db.get_prey_by_name(name)
-        territory = self.terr_db.get_clan_by_name(terr)
+        territory = self.terr_db.get_clan_by_name(terr.strip().capitalize())
         self.prey_db.new_prey_territory(prey, territory)
         await self.context.bot.send_message(
             self.chat_id,
@@ -88,7 +88,7 @@ class PreyCommandHandler(CommandBase):
     async def remove_prey_territory(self):
         name, terr = self.text.strip().split("\n")
         prey = self.prey_db.get_prey_by_name(name)
-        territory = self.terr_db.get_clan_by_name(terr)
+        territory = self.terr_db.get_clan_by_name(terr.strip().capitalize())
         self.prey_db.remove_prey_terr(prey, territory)
         await self.context.bot.send_message(
             self.chat_id,
