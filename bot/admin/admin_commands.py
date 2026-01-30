@@ -15,7 +15,6 @@ from bot.admin.system import SystemCommandHandler
 from bot.command_base import CommandBase
 from db.players import DbPlayerConfig
 from exceptions import NoRightException
-from logs.logs import main_logger
 
 
 class AdminCommandHandler(CommandBase):
@@ -37,7 +36,7 @@ class AdminCommandHandler(CommandBase):
         ]
 
     async def __aenter__(self):
-        main_logger.debug(f"Admin command manager starting with command: {self.command}\nparams: {self.text}")
+        self.write_log("debug", f"Admin command manager starting with command: {self.command}\nparams: {self.text}")
         if not self.player_db.check_if_user_is_admin(self.user.id):
             self.context.chat_data.update(  # type: ignore
                 {"exc": {"admin_error": [self.user.id, self.user.username]}}
@@ -46,7 +45,7 @@ class AdminCommandHandler(CommandBase):
         return self
 
     async def __aexit__(self, *args):
-        main_logger.debug("Admin command handler shutting down")
+        self.write_log("debug", "Admin command handler shutting down")
 
     async def route(self):
         for handler in self.subclasses:
@@ -58,7 +57,7 @@ class AdminCommandHandler(CommandBase):
                     raise TelegramError(str(err)) from err
                 except Exception as err:
                     await self.context.bot.send_message(self.chat_id, "Ошибка. Тагните Клинфа.")
-                    main_logger.error(f"Error in {self.command}: {err}\n{traceback.format_exc()}")
+                    self.write_log("error", f"Error in {self.command}: {err}\n{traceback.format_exc()}")
                 break
         else:
             await self.unknown_command()

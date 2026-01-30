@@ -1,13 +1,18 @@
 import os
+import platform
 
 from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
 
+from python_loki_logger import LokiLogger
+
 load_dotenv()
 
 
-def set_up_logger(logger_name, file_name):
+def set_up_logger(logger_name):
+    path = os.getenv("LOG_PATH")
+    file_name = f"{path}main.log"
     logger = logging.getLogger(logger_name)
     logger.setLevel(logging.DEBUG)
     handler = RotatingFileHandler(file_name, maxBytes=50000000, backupCount=5, encoding="utf-8")
@@ -22,15 +27,20 @@ def set_up_logger(logger_name, file_name):
     return logger
 
 
-path = os.getenv("LOG_PATH")
+def set_up_logger_linux():
+    url, user, passw = os.environ["GRAPHANA_URL"], os.environ["GRAPHANA_USER"], os.environ["GRAPHANA_PASS"]
+    logger = LokiLogger(
+        baseUrl=url,
+        auth=(
+            user,
+            passw,  # type: ignore
+        ),
+        labels={"app": "catbot", "env": "test"},
+    )
+    return logger
 
-if path is None:
-    main_logger = logging.getLogger()
-    user_logger = logging.getLogger()
-    schedule_logger = logging.getLogger()
-    system_logger = logging.getLogger()
+
+if platform.system() == "Windows":
+    logger = set_up_logger("main")
 else:
-    main_logger = set_up_logger("main", f"{path}main.log")
-    user_logger = set_up_logger("user_exc", f"{path}user_exc.log")
-    schedule_logger = set_up_logger("schedule_logger", f"{path}schedule.log")
-    system_logger = set_up_logger("system_logger", f"{path}system.log")
+    logger = set_up_logger_linux()

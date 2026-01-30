@@ -24,7 +24,6 @@ from sqlmodel.sql.expression import SelectOfScalar
 from db.validators import validate_name, validate_percent, validate_negative, validate_positive, validate_stat
 from db.table_data import AGES, CLANS, SEASONS, SETTINGS
 from db.utils import PreyStats
-from logs.logs import main_logger as logger
 
 load_dotenv()
 
@@ -537,7 +536,6 @@ class Characters(SQLModel, table=True):
             "healing": self.get_actual_stat("healing"),
             "faith": self.get_actual_stat("faith"),
         }
-        logger.debug(f"Получены актуальные характеристики для {self.name}")
         return stats
 
     @staticmethod
@@ -812,6 +810,7 @@ class DbBrowser:
     def __init__(self) -> None:
         self.session = Session(engine, expire_on_commit=False)
         self.async_session = AsyncSession(as_engine)
+        self.log_labels = {"base": "db", "handler": self.__class__.__name__}
 
     def commit(self):
         self.session.commit()

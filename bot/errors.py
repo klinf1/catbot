@@ -1,13 +1,14 @@
 from telegram.ext import ContextTypes
 
-from logs.logs import main_logger, user_logger
+from bot.command_base import LoggingCommand
 
 
-class ErrorHandler:
+class ErrorHandler(LoggingCommand):
     def __init__(self, context: ContextTypes.DEFAULT_TYPE, dev_id: str) -> None:
         self.context = context
         self.dev_id: int = int(dev_id)
         self.exc_dict: dict = context.chat_data.get("exc", {}) if context.chat_data else {}  # type: ignore
+        self.log_labels = {"base": "error_handlers"}
 
     @property
     def error_dict(self):
@@ -26,12 +27,13 @@ class ErrorHandler:
             await self.unexpected_error()
 
     async def admin_error(self):
-        user_logger.info(f"{self.exc_dict['admin_error'][1]} хотел использовать админскую комманду!")
+        self.write_log("info", f"{self.exc_dict['admin_error'][1]} хотел использовать админскую комманду!")
         self.context.chat_data["exc"].__delitem__("admin_error")  # type: ignore
 
     async def banned_error(self):
-        user_logger.info(
-            f"{self.exc_dict['banned'][1]} забанен, но очень хочет играть."  # type: ignore
+        self.write_log(
+            "info",
+            f"{self.exc_dict['banned'][1]} забанен, но очень хочет играть.",  # type: ignore
         )
         await self.context.bot.send_message(
             self.exc_dict["banned"][0],
@@ -40,12 +42,13 @@ class ErrorHandler:
         self.context.chat_data["exc"].__delitem__("banned")  # type: ignore
 
     async def superuser_error(self):
-        user_logger.info(
-            f"{self.exc_dict['superuser_error'][1]} хотел использовать команду суперюзера!"  # type: ignore
+        self.write_log(
+            "info",
+            f"{self.exc_dict['superuser_error'][1]} хотел использовать команду суперюзера!",  # type: ignore
         )
         await self.context.bot.send_message(self.exc_dict["superuser_error"][0], "Это команда для владельцев бота.")  # type: ignore
         self.context.chat_data["exc"].__delitem__("superuser_error")  # type: ignore
 
     async def unexpected_error(self):
-        main_logger.exception(self.context.error)
+        self.write_log("exception", self.context.error)
         await self.context.bot.send_message(self.dev_id, self.context.error)

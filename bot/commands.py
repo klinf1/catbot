@@ -3,6 +3,7 @@ from telegram.ext import ContextTypes
 
 from bot.admin.admin_commands import AdminCommandHandler
 from bot.admin.system import SystemConv, SystemTextCommand
+from bot.command_base import LoggingCommand
 from bot.common_commands import CommonCommandHandler
 from bot.conversations import (
     HuntConversation,
@@ -13,10 +14,9 @@ from bot.conversations import (
     HuntTerrChoice,
 )
 from exceptions import WrongChatError
-from logs.logs import main_logger as logger
 
 
-class CommandRouter:
+class CommandRouter(LoggingCommand):
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         self.command: str = update.message.text.split(" ", 1)[0].replace("/", "")  # type: ignore
         self.update = update
@@ -34,7 +34,7 @@ class CommandRouter:
                 await c.route()
 
 
-class ConversationRouter:
+class ConversationRouter(LoggingCommand):
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         self.update = update
         self.context = context
@@ -47,7 +47,7 @@ class ConversationRouter:
                     await self.system.job_modify()
 
 
-class CallbackRouter:
+class CallbackRouter(LoggingCommand):
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         self.update = update
         self.context = context
@@ -61,7 +61,7 @@ class CallbackRouter:
 
     async def route(self):
         if state := self.context.user_data.get("state", {}):
-            logger.debug(f"Starting callback routing with state: {state}")
+            self.write_log("debug", f"Starting callback routing with state: {state}")
             match state.get("name"):
                 case "hunt_completed":
                     async with self.hunt_conv as conv:

@@ -2,12 +2,12 @@ from random import choice
 
 from sqlmodel import Session, and_, or_, select
 
+from bot.command_base import LoggingCommand
 from db import Characters, Clans, DbBrowser, Herbs
-from logs.logs import main_logger as logger
 from roll import roll
 
 
-class HerbUser(DbBrowser):
+class HerbUser(DbBrowser, LoggingCommand):
     session: Session
     char: Characters
     territory: Clans | None
@@ -26,7 +26,7 @@ class HerbUser(DbBrowser):
 
     def get_herb(self) -> Herbs | None:
         res = roll()
-        logger.debug(f"roll result for herbalism: {res}")
+        self.write_log("debug", f"roll result for herbalism: {res}")
         query = select(Herbs).where(
             and_(
                 Herbs.rarity_max >= res,
@@ -45,7 +45,7 @@ class HerbUser(DbBrowser):
             herb = choice(poss_herb)
         except IndexError:
             herb = None
-        logger.debug(f"Трава для сбора: {str(herb)}")
+        self.write_log("debug", f"Трава для сбора: {str(herb)}")
         return herb
 
     def check_success(self):
@@ -53,9 +53,9 @@ class HerbUser(DbBrowser):
             return False
         res = self.char.actual_stats["healing"] + self.char.actual_stats["herbalism"]
         if self.herb.sum_required > res:
-            logger.debug(f"Провал собирательства: {self.char.name}, {self.herb.name}")
+            self.write_log("debug", f"Провал собирательства: {self.char.name}, {self.herb.name}")
             return False
-        logger.debug(f"Успешно собрана трава {self.char.name}, {self.herb.name}")
+        self.write_log("debug", f"Успешно собрана трава {self.char.name}, {self.herb.name}")
         return True
 
 

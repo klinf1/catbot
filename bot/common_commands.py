@@ -10,7 +10,6 @@ from db.characters import DbCharacterUser
 from db.clans import DbClanConfig
 from db.players import DbPlayerConfig
 from exceptions import BannedException, WrongChatError
-from logs.logs import main_logger, user_logger
 
 
 class CommonCommandHandler(CommandBase):
@@ -35,7 +34,7 @@ class CommonCommandHandler(CommandBase):
         self.clans_db = DbClanConfig()
 
     async def __aenter__(self):
-        main_logger.debug(f"Common command manager starting with command: {self.command}")
+        self.write_log("info", f"Common command manager starting with command: {self.command}")
         player = self.player_db.get_player_by_id(self.user.id)
         if not player:
             self.player_db.add_player(
@@ -44,7 +43,7 @@ class CommonCommandHandler(CommandBase):
                 self.user.first_name,
                 self.user.last_name,
             )
-            main_logger.info(f"Игрок {self.user.id} {self.user.username} зарегистрирован")
+            self.write_log("info", f"Игрок {self.user.id} {self.user.username} зарегистрирован")
         else:
             if self.user.username != player.username and self.user.username is not None:
                 self.player_db.update_username(player, self.user.username)
@@ -60,7 +59,7 @@ class CommonCommandHandler(CommandBase):
         return self
 
     async def __aexit__(self, *args):
-        main_logger.debug("Command handler shutting down")
+        self.write_log("info", "Command handler shutting down")
 
     async def commands(self):
         commands = "\n".join(
@@ -132,7 +131,10 @@ class CommonCommandHandler(CommandBase):
                 self.char_404_msg,
                 reply_to_message_id=self.update.message.id,
             )
-            user_logger.info(f"Охота чужим персонажем {self.update.message.from_user.id}")
+            self.write_log(
+                "info",
+                f"Охота чужим персонажем {self.update.message.from_user.id}",
+            )
             return None
         self.context.user_data.update(
             {

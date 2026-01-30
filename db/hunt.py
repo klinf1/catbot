@@ -4,6 +4,7 @@ from sqlite3 import IntegrityError
 
 from sqlmodel import Session, and_, select, or_
 
+from bot.command_base import LoggingCommand
 from db import Characters, Clans, DbBrowser, Prey, PreyTerritory
 from db.characters import DbCharacterConfig
 from db.injuries import DbInjuryCharacter
@@ -13,11 +14,10 @@ from exceptions import (
     NoItemFoundDbError,
     TooMuchHuntingError,
 )
-from logs.logs import main_logger as logger
 from roll import roll
 
 
-class Hunt(DbBrowser):
+class Hunt(DbBrowser, LoggingCommand):
     prey: Prey | None
     char: Characters
     clan: Clans | None
@@ -57,13 +57,13 @@ class Hunt(DbBrowser):
 
     def get_prey(self) -> Prey | None:
         res = roll()
-        logger.debug(f"roll result for hunt: {res}")
+        self.write_log("debug", f"roll result for hunt: {res}")
         season = self.get_curr_season()
         if not season:
             mod = 0
         else:
             mod = season.hunt_mod
-        logger.debug(f"Current season: {season.name} with hunt mod {mod}")
+        self.write_log("debug", f"Current season: {season.name} with hunt mod {mod}")
         query = (
             select(Prey)
             .join(PreyTerritory, isouter=True)
@@ -78,17 +78,17 @@ class Hunt(DbBrowser):
             )
         )
         poss_prey = self.select_many(query)
-        logger.debug(f"Список возможной дичи {poss_prey}")
+        self.write_log("debug", f"Список возможной дичи {poss_prey}")
         try:
             prey = choice(poss_prey)
-            logger.debug(f"Дичь для охоты: {str(prey)}")
+            self.write_log("debug", f"Дичь для охоты: {str(prey)}")
         except IndexError:
             prey = None
-            logger.debug("Дичь не найдена!")
+            self.write_log("debug", "Дичь не найдена!")
         return prey
 
     def get_char(self) -> Characters:
-        logger.debug(f"getting char data for name {self.char_name}")
+        self.write_log("debug", f"getting char data for name {self.char_name}")
         query = select(Characters).where(Characters.name == self.char_name)
         res = self.safe_select_one(query)
         if not res:
@@ -96,7 +96,7 @@ class Hunt(DbBrowser):
         return res
 
     def get_clan(self) -> Clans:
-        logger.debug(f"Getting cat territory for {self.territory}")
+        self.write_log("debug", f"Getting cat territory for {self.territory}")
         query = select(Clans).where(Clans.no == self.territory)
         res = self.safe_select_one(query)
         if not res:
@@ -110,20 +110,20 @@ class Hunt(DbBrowser):
         res = self.char.actual_stats["hunting"] + self.char.actual_stats[stat]
         if self.prey.territory == self.char.clan_no:
             res += self.char.actual_stats["faith"]
-        logger.debug(f"Результат охоты: {res} против {self.prey.sum_required or 0}")
+        self.write_log("debug", f"Результат охоты: {res} против {self.prey.sum_required or 0}")
         if (self.prey.sum_required or 0) > res:
-            logger.debug(f"Охота провалилась {self.prey.sum_required or 0} > {res}")
+            self.write_log("debug", f"Охота провалилась {self.prey.sum_required or 0} > {res}")
             return False
-        logger.debug(f"Охота успешна {self.prey.sum_required or 0} <= {res}")
+        self.write_log("debug", f"Охота успешна {self.prey.sum_required or 0} <= {res}")
         return True
 
     def apply_consequences(self) -> None:
         if self.prey.injury_chance and randint(1, 100) < self.prey.injury_chance and self.prey.injury:
-            logger.debug(f"{self.char.name} получает ранение {self.prey.injury}")
+            self.write_log("debug", f"{self.char.name} получает ранение {self.prey.injury}")
             try:
                 DbInjuryCharacter(self.char.no, self.prey.injury).add_injury()
             except IntegrityError:
-                logger.debug(f"Повторное ранение {self.prey.injury} для {self.char.name}, игнорирую")
+                self.write_log("debug", f"Повторное ранение {self.prey.injury} для {self.char.name}, игнорирую")
 
     def get_curr_hunts_message(self) -> str:
         res = self.get_char()

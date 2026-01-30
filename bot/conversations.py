@@ -22,7 +22,6 @@ from exceptions import (
     NoItemFoundDbError,
     TooMuchHuntingError,
 )
-from logs.logs import main_logger
 
 
 class HuntConversation(CallbackBase):
@@ -56,7 +55,7 @@ class InvBaseConv(CallbackBase):
     async def action(self):
         char = self.char_db.get_char_by_name(self.context.user_data["state"]["args"]["cat"])
         if not char:
-            main_logger.error("Character not found in InvBaseConv")
+            self.write_log("warning", "Character not found in InvBaseConv")
             return
         match self.query_data:
             case "view_inv":
@@ -179,24 +178,24 @@ class HuntTerrChoice(CallbackBase):
         if self.user.id != active_user:
             return
         try:
-            main_logger.debug(f"Начало охоты для {self.user.username} {cat} на территории номер {terr}")
+            self.write_log("debug", f"Начало охоты для {self.user.username} {cat} на территории номер {terr}")
             prey, success = hunter.hunt()
         except CharacterDeadException:
             await self.context.bot.send_message(self.chat_id, "Этот персонаж мертв!")
-            main_logger.info(f"Охота с мертвым персонажем: {self.user.username}")
+            self.write_log("info", f"Охота с мертвым персонажем: {self.user.username}")
         except CharacterFrozenException:
             await self.context.bot.send_message(self.chat_id, "Этот персонаж сейчас неактивен!")
-            main_logger.info(f"Охота с замороженным персонажем: {self.user.username}")
+            self.write_log("info", f"Охота с замороженным персонажем: {self.user.username}")
         except NoItemFoundDbError as err:
             await self.bot.send_message(
                 self.chat_id,
                 str(err),
             )
-            main_logger.info(f"Ошибка поиска в БД {err} {traceback.format_exc()}")
+            self.write_log("info", f"Ошибка поиска в БД {err} {traceback.format_exc()}")
         except TooMuchHuntingError:
             await self.bot.send_message(self.chat_id, "Этот персонаж уже достаочно поохотился в этом сезоне!")
         except Exception as err:
-            main_logger.error(f"{err} {traceback.format_exc()}")
+            self.write_log("error", f"{err} {traceback.format_exc()}")
         else:
             await self.bot.send_message(self.chat_id, hunter.get_curr_hunts_message())
             if success and prey:

@@ -40,7 +40,7 @@ jobs:
       with:
         secrets: ${{ toJSON(secrets) }}
         file: .env
-        include: ADMIN*, TOKEN, TEST_MODE, GROUPS, DEV_ID, TOPIC, DB_PATH
+        include: ADMIN*, TOKEN, TEST_MODE, GROUPS, DEV_ID, TOPIC, DB_PATH, GRAPHANA*
     - name: Install uv and set the python version
       uses: astral-sh/setup-uv@v7
       with:
@@ -63,7 +63,7 @@ jobs:
       with:
         secrets: ${{ toJSON(secrets) }}
         file: .env
-        include: ADMIN*, TOKEN, TEST_MODE, GROUPS, DEV_ID, TOPIC, DB_PATH, LOG_PATH
+        include: ADMIN*, TOKEN, TEST_MODE, GROUPS, DEV_ID, TOPIC, DB_PATH, LOG_PATH, GRAPHANA*
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     - name: Login to Docker 

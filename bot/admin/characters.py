@@ -8,7 +8,6 @@ from db.characters import DbCharacterConfig
 from db.decorators import superuser_command
 from db.players import DbPlayerConfig
 from exceptions import CharNotFound, NotRealClanError
-from logs.logs import main_logger
 from utils import prepare_for_db
 
 
@@ -30,7 +29,7 @@ class CharacterCommandHandler(CommandBase):
         params_dict.update({"name": name.capitalize()})
         if self.char_config.get_char_by_name(name.capitalize()):
             await self.bot.send_message(self.chat_id, f"Персонаж с именем {name} уже существует!")
-            main_logger.info(f"Попытка создания кота с одинаковым именем {name}")
+            self.write_log("info", f"Попытка создания кота с одинаковым именем {name}")
             return
         try:
             self.char_config.add_character(params_dict)
@@ -38,7 +37,7 @@ class CharacterCommandHandler(CommandBase):
         except NotRealClanError:
             await self.bot.send_message(self.chat_id, f"Не найден клан {params_dict['clan_no']}")
         except IntegrityError as err:
-            main_logger.info(f"Ошибка создания персонажа: {err}")
+            self.write_log("info", f"Ошибка создания персонажа: {err}")
             await self.bot.send_message(self.chat_id, "Ошибка создания персонажа! Проверьте параметры!")
 
     async def add_char_help(self):
@@ -162,7 +161,7 @@ class CharacterCommandHandler(CommandBase):
             except ValueError:
                 return Exception("Новое число должно быть целым.")
             except Exception as err:
-                main_logger.error(f"Ошибка установки количества охот: {err}")
+                self.write_log("error", f"Ошибка установки количества охот: {err}")
                 raise
 
         if "\n" in self.text:
@@ -189,4 +188,4 @@ class CharacterCommandHandler(CommandBase):
             await self.bot.send_message(self.chat_id, err.tg_answer)
             return
         await self.bot.send_message(self.chat_id, f"Новое количество охот персонажу {cat} успешно задано.")
-        main_logger.debug(f"Установлено новое количество охот для {cat} = {d_params['new']}")
+        self.write_log("debug", f"Установлено новое количество охот для {cat} = {d_params['new']}")

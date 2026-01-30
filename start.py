@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from bot.main import bot_main
 from db import DbBrowser, create_tables
 from debug_tables import create_test_data
-from logs.logs import main_logger as logger
+from logs.logs import logger
 from schedule import create_schedules
 
 load_dotenv()

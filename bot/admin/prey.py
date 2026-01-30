@@ -5,7 +5,6 @@ from bot.command_base import CommandBase
 from db import Prey
 from db.clans import DbClanConfig
 from db.prey import DbPreyConfig
-from logs.logs import main_logger
 from utils import prepare_for_db
 
 
@@ -29,7 +28,7 @@ class PreyCommandHandler(CommandBase):
         except LookupError:
             await self.context.bot.send_message(self.chat_id, f"Стат {params_dict.get('stat')} не подходит для дичи.")
         except Exception as err:
-            main_logger.error(f"Error adding prey {err}")
+            self.write_log("info", f"Error adding prey {err}")
             await self.bot.send_message(self.chat_id, "Ошибка добавления дичи. Проверьте параметры.")
         else:
             await self.context.bot.send_message(self.chat_id, f"Дичь {name} добавлена успешно!")

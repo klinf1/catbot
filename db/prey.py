@@ -2,12 +2,12 @@ from typing import Any
 
 from sqlmodel import Session, and_, select
 
+from bot.command_base import LoggingCommand
 from db import Clans, DbBrowser, Prey, PreyTerritory
 from db.clans import DbClanConfig
-from logs.logs import main_logger as logger
 
 
-class DbPreyConfig(DbBrowser):
+class DbPreyConfig(DbBrowser, LoggingCommand):
     session: Session
 
     def __init__(self) -> None:
@@ -49,7 +49,7 @@ class DbPreyConfig(DbBrowser):
             new_prey = Prey(**params)
             self.add(new_prey)
         except LookupError as err:
-            logger.error(f"Ошибка добавления дичи: {err}")
+            self.write_log("error", f"Ошибка добавления дичи: {err}")
             raise
         added_prey: Prey = self.select_one(select(Prey).where(Prey.name == new_prey.name))
         for i in territories:

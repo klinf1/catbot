@@ -6,11 +6,10 @@ from apscheduler.job import Job
 from apscheduler.triggers.cron import CronTrigger
 
 from bot.buttons import get_job_keyboard
-from bot.command_base import CommandBase, CallbackBase
+from bot.command_base import CommandBase, CallbackBase, LoggingCommand
 from db.decorators import superuser_command
 from db.seasons import SeasonsConfig
 from db.settings import SettingConfig
-from logs.logs import system_logger as logger
 from schedule import scheduler
 
 
@@ -35,7 +34,7 @@ class SystemCommandHandler(CommandBase):
 
     @superuser_command
     async def advance_seasons(self):
-        logger.info(f"Advancing seasons {self.user.username}")
+        self.write_log("debug", f"Advancing seasons {self.user.username}")
         self.season_db.set_next_season()
 
     @superuser_command
@@ -43,7 +42,7 @@ class SystemCommandHandler(CommandBase):
         if not self.validate_setting(self.text):
             await self.bot.send_message(self.chat_id, "Количество охот должно быть положительным целым числом!")
             return
-        logger.info(f"hunt_attempts change to {self.text} {self.user.username}")
+        self.write_log("info", f"hunt_attempts change to {self.text} {self.user.username}")
         self.setting_db.set_setting("hunt_attempts", self.text)
 
     @superuser_command
@@ -54,7 +53,7 @@ class SystemCommandHandler(CommandBase):
                 "Максимальная степень голода должна быть положительным целым числом!",
             )
             return
-        logger.info(f"max_hunger change to {self.text} {self.user.username}")
+        self.write_log("info", f"max_hunger change to {self.text} {self.user.username}")
         self.setting_db.set_setting("max_hunger", self.text)
 
     @superuser_command
@@ -74,7 +73,7 @@ class SystemCommandHandler(CommandBase):
             )
             return
         params = {"name": f"hunger_pen_{severity}", "value": value}
-        logger.info(f"new hunger_pen_{severity} {value} for {self.user.username}")
+        self.write_log("info", f"new hunger_pen_{severity} {value} for {self.user.username}")
         self.setting_db.insert_new_setting(params)
 
     @superuser_command
@@ -93,7 +92,7 @@ class SystemCommandHandler(CommandBase):
                 "Для данной степени голода еще не настроен штраф. Воспользуйтесь командой /add_new_hunger_pen",
             )
             return
-        logger.info(f"update hunger_pen_{severity} {value} for {self.user.username}")
+        self.write_log("info", f"update hunger_pen_{severity} {value} for {self.user.username}")
         self.setting_db.set_setting(f"hunger_pen_{severity}", value)
 
     async def view_current_jobs(self):
@@ -116,14 +115,14 @@ class SystemCommandHandler(CommandBase):
     async def modify_job(self):
         text = "Эта комманда позволяет менять параметры запуска джоба. Будьте КРАЙНЕ осторожны с ее использованием."
         self.context.user_data.update({"state": {"name": "settings", "action": "view_modify"}})
-        logger.info(f"modify_job call for {self.user.username}")
+        self.write_log("info", f"modify_job call for {self.user.username}")
         await self.bot.send_message(self.chat_id, text, reply_markup=get_job_keyboard(self.jobs))
 
     @superuser_command
     async def run_job(self):
         for job in self.jobs:
             if job.name.lower() == self.text.lower():
-                logger.info(f"run_job {job.name} call for {self.user.username}")
+                self.write_log("info", f"run_job {job.name} call for {self.user.username}")
                 job.func()
                 break
         else:
@@ -136,6 +135,7 @@ class SystemCommandHandler(CommandBase):
                 self.chat_id,
                 "Максимальный возраст должен быть положительным целым числом!",
             )
+        self.write_log("info", f"New mag_age {self.text}")
         self.setting_db.set_setting("max_age", self.text)
 
 
@@ -167,14 +167,17 @@ class SystemConv(CallbackBase):
                         }
                     }
                 )
-                logger.info(f"modify_job chosen job {job.name} for {self.user.username}")
+                self.write_log("info", f"modify_job chosen job {job.name} for {self.user.username}")
                 await self.bot.send_message(self.chat_id, text)
 
 
-class SystemTextCommand:
+class SystemTextCommand(LoggingCommand):
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         self.update = update
         self.context = context
+        self.log_labels = {
+            "handler": self.__class__.__name__,
+        }
 
     @property
     def job_id(self) -> str:
@@ -196,5 +199,5 @@ class SystemTextCommand:
             params.update({k.strip(): v.strip()})
         job = job.modify(trigger=CronTrigger(**params))
         self.context.user_data.__delitem__("state")
-        logger.info(f"modify_job params {params} for {self.update.message.from_user.username}")
+        self.write_log("info", f"modify_job params {params} for {self.update.message.from_user.username}")
         await self.context.bot.send_message(self.update.effective_chat.id, f"Джоб {job.name} изменен успешно")

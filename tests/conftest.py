@@ -87,6 +87,9 @@ class MockBrowser(DbBrowser):
     def safe_select_one(self, query):
         return self.session.exec(query).first()
 
+    def write_log(*args, **kwargs):
+        return None
+
 
 class BaseTest:
     handler_class: type[DbBrowser] | Iterable[type[DbBrowser]]

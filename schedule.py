@@ -10,7 +10,7 @@ from telegram import Bot
 
 from db import Ages, Characters, DbBrowser, PreyPile, Settings, engine, SQLModel
 from db.seasons import SeasonsConfig
-from logs.logs import schedule_logger as logger
+from logs.logs import logger
 
 load_dotenv()
 db = DbBrowser()
@@ -18,19 +18,24 @@ active_chars = select(Characters).where(and_(Characters.is_dead == False, Charac
 scheduler = BackgroundScheduler()
 
 
+def _get_labels(name: str):
+    return {"base": "schedules", "func": name}
+
+
 def create_schedules() -> None:
-    logger.debug("schedule creation start")
+    labels = _get_labels("create_schedules")
+    logger.debug("schedule creation start", labels=labels)
     store = SQLAlchemyJobStore(engine=engine, metadata=SQLModel.metadata)
     scheduler.add_jobstore(store)
     scheduler.start()
     if not store.get_all_jobs():
-        logger.debug("No jobs found, creating...")
+        logger.debug("No jobs found, creating...", labels=labels)
         scheduler.add_job(advance_seasons, "cron", name="advance_seasons", minute=1)  # day=1
         scheduler.add_job(cut_pile, "cron", name="cut_pile", minute=1)
         scheduler.add_job(check_nutrition, "cron", name="check_nutrition", minute=1)
         scheduler.add_job(age_cats, "cron", name="age_cats", minute=1)
         scheduler.add_job(reset_hunt_attempts, "cron", name="reset_hunt_attempts", second=2)  # day_of_week=0
-    logger.debug("Schedule creation end")
+    logger.debug("Schedule creation end", labels=labels)
 
 
 def check_nutrition():
@@ -44,27 +49,30 @@ def age_cats():
 
 
 def advance_seasons():
-    logger.info("Season advance start")
+    labels = _get_labels("advance_seasons")
+    logger.info("Season advance start", labels=labels)
     SeasonsConfig().set_next_season()
-    logger.info("Season advance end")
+    logger.info("Season advance end", labels=labels)
 
 
 def cut_pile():
+    labels = _get_labels("cut_pile")
     db = DbBrowser()
-    logger.info("Pile cutting start")
+    logger.info("Pile cutting start", labels=labels)
     piles: list[PreyPile] = db.select_many(select(PreyPile))
     clan_list = {i.clan for i in piles}
     for clan in clan_list:
-        logger.info(f"cutting for clan no {clan}")
+        logger.info(f"cutting for clan no {clan}", labels=labels)
         prey_list = sorted([i for i in piles if i.clan == clan], key=lambda v: v.date_added)
         old = prey_list[: len(prey_list) // 2]
         for i in old:
             db.delete(i)
-    logger.info("Pile cutting end")
+    logger.info("Pile cutting end", labels=labels)
 
 
 async def _check_nutrition():
-    logger.info("Nutrition check start")
+    labels = _get_labels("check_nutrition")
+    logger.info("Nutrition check start", labels=labels)
     db = DbBrowser()
     bot = Bot(token=os.getenv("TOKEN"))
     chars: list[Characters] = db.select_many(active_chars)
@@ -77,20 +85,21 @@ async def _check_nutrition():
             if char.hunger > int(max_hunger.value):
                 char.is_dead = True
                 db.add(char)
-                logger.info(f"Character {char.name} died of hunger UwU")
+                logger.info(f"Character {char.name} died of hunger UwU", labels=labels)
                 await bot.send_message(char.player_chat_id, f"Ваш персонаж {char.name} умер от голода!")
                 continue
             db.add(char)
-            logger.debug(f"Hunger added for {char.name} new {char.hunger}")
+            logger.debug(f"Hunger added for {char.name} new {char.hunger}", labels=labels)
         if char.nutrition >= age.food_req and char.hunger != 0:
-            logger.debug(f"Hunger reset for {char.name}")
+            logger.debug(f"Hunger reset for {char.name}", labels=labels)
             char.hunger = 0
             db.add(char)
-    logger.info("Nutrition check end")
+    logger.info("Nutrition check end", labels=labels)
 
 
 async def _age_cats():
-    logger.info("Age start")
+    labels = _get_labels("age_cats")
+    logger.info("Age start", labels=labels)
     bot = Bot(token=os.getenv("TOKEN"))
     db = DbBrowser()
     admin_chat = os.getenv("ADMIN_CHAT")
@@ -103,24 +112,25 @@ async def _age_cats():
         char.age += 2
         if char.age in breakpoints:
             if char.age >= int(max_age.value):
-                logger.info(f"Char {char.name} died of old age.")
+                logger.info(f"Char {char.name} died of old age.", labels=labels)
                 char.is_dead = True
                 await bot.send_message(char.player_chat_id, f"Ваш персонаж {char.name} умер от старости.")
             else:
-                logger.info(f"Char {char.name} grown to {char.age} moons.")
+                logger.info(f"Char {char.name} grown to {char.age} moons.", labels=labels)
                 await bot.send_message(
                     admin_chat,
                     f"Персонаж {char.name} вырос до {char.age} лун! Нужно сменить ему характеристики!",
                 )
         db.add(char)
-    logger.info("Age end")
+    logger.info("Age end", labels=labels)
 
 
 def reset_hunt_attempts():
-    logger.info("Hunt attemps start")
+    labels = _get_labels("reset_hunt_attempts")
+    logger.info("Hunt attemps start", labels=labels)
     db = DbBrowser()
     chars: list[Characters] = db.select_many(active_chars)
     for char in chars:
         char.curr_hunts = 0
         db.add(char)
-    logger.info("Hunt attemps end")
+    logger.info("Hunt attemps end", labels=labels)
