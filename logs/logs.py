@@ -37,7 +37,7 @@ def set_up_logger_linux():
         baseUrl=url,
         auth=(
             user,
-            passw,  # type: ignore
+            passw,
         ),
         labels={"app": "catbot", "env": env},
     )
