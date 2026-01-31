@@ -10,16 +10,17 @@ from telegram import Bot
 
 from db import Ages, Characters, DbBrowser, PreyPile, Settings, engine, SQLModel
 from db.seasons import SeasonsConfig
-from logs.logs import logger
+from logs.logs import LoggingCommand
 
 load_dotenv()
 db = DbBrowser()
 active_chars = select(Characters).where(and_(Characters.is_dead == False, Characters.is_frozen == False))  # noqa: E712
 scheduler = BackgroundScheduler()
+logger = LoggingCommand(log_labels={"base": "schedules"})
 
 
 def _get_labels(name: str):
-    return {"base": "schedules", "func": name}
+    return {"func": name}
 
 
 def create_schedules() -> None:

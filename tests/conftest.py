@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import logging
 from typing import Any, Iterable
 
 import pytest
@@ -186,8 +185,3 @@ def last_char_no():
     if res is None:
         return 0
     return res
-
-
-@pytest.fixture(scope="function", autouse=True)
-def mock_log(mocker):
-    mocker.patch("logs.logs.set_up_logger", side_effect=logging.getLogger)

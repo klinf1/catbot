@@ -3,7 +3,6 @@ from telegram.ext import ContextTypes
 
 from bot.admin.admin_commands import AdminCommandHandler
 from bot.admin.system import SystemConv, SystemTextCommand
-from bot.command_base import LoggingCommand
 from bot.common_commands import CommonCommandHandler
 from bot.conversations import (
     HuntConversation,
@@ -14,13 +13,17 @@ from bot.conversations import (
     HuntTerrChoice,
 )
 from exceptions import WrongChatError
+from logs.logs import LoggingCommand
+
+logger = LoggingCommand(log_labels={"base": "command_router"})
 
 
-class CommandRouter(LoggingCommand):
+class CommandRouter:
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         self.command: str = update.message.text.split(" ", 1)[0].replace("/", "")  # type: ignore
         self.update = update
         self.context = context
+        logger.debug(update.message.text)
 
     async def route(self):
         if self.command in CommonCommandHandler.__dict__:
@@ -34,7 +37,7 @@ class CommandRouter(LoggingCommand):
                 await c.route()
 
 
-class ConversationRouter(LoggingCommand):
+class ConversationRouter:
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         self.update = update
         self.context = context
@@ -47,7 +50,7 @@ class ConversationRouter(LoggingCommand):
                     await self.system.job_modify()
 
 
-class CallbackRouter(LoggingCommand):
+class CallbackRouter:
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         self.update = update
         self.context = context

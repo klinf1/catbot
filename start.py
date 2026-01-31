@@ -7,10 +7,11 @@ from dotenv import load_dotenv
 from bot.main import bot_main
 from db import DbBrowser, create_tables
 from debug_tables import create_test_data
-from logs.logs import logger
+from logs.logs import LoggingCommand
 from schedule import create_schedules
 
 load_dotenv()
+logger = LoggingCommand(log_labels={"base": __name__})
 
 
 def main():

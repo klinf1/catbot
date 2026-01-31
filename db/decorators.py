@@ -2,7 +2,9 @@ from sqlmodel import Session, select
 
 from db import Players, engine
 from exceptions import BannedException, NoRightException
-from logs.logs import logger
+from logs.logs import LoggingCommand
+
+logger = LoggingCommand(log_labels={"base": __name__})
 
 
 def not_banned(func):

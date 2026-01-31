@@ -1,28 +1,12 @@
 from os import getenv
-from typing import Any, Literal
+from typing import Any
 
 from sqlmodel import SQLModel
 from telegram import Bot, Update, User
 from telegram.ext import ContextTypes
 
 from exceptions import EditError
-from logs.logs import logger
-
-
-class LoggingCommand:
-    log_labels: dict = {}
-    log_extras: dict = {}
-
-    def write_log(
-        self,
-        level: Literal["debug", "info", "warn", "error", "exception"],
-        message: str,
-        extras: dict = {},
-        labels: dict = {},
-    ):
-        labels.update(self.log_labels)
-        extras.update(self.log_extras)
-        getattr(logger, level)(message=message, extras=extras, labels=labels)
+from logs.logs import LoggingCommand
 
 
 class CommandBase(LoggingCommand):
@@ -36,7 +20,7 @@ class CommandBase(LoggingCommand):
         self.bot: Bot = self.context.bot
         self.topic_id: int = getenv("TOPIC", update.message.id)
         self.group_chats = getenv("GROUPS", getenv("ADMINS", "")).split(",")
-        self.log_labels = {
+        log_labels = {
             "base": "command",
             "handler": self.__class__.__name__,
             "command": self.command,
@@ -44,7 +28,7 @@ class CommandBase(LoggingCommand):
             "user_name": self.user.username,
             "chat_id": self.chat_id,
         }
-        self.write_log("debug", self.update.message.text)
+        super().__init__(log_labels=log_labels)
 
     async def unknown_command(self):
         await self.context.bot.send_message(self.chat_id, "Неизвестная команда!")
@@ -139,13 +123,14 @@ class CallbackBase(LoggingCommand):
         self.bot: Bot = self.context.bot
         self.user: User = self.update.callback_query.from_user  # type: ignore
         self.topic_id: int = getenv("TOPIC")
-        self.log_labels = {
+        log_labels = {
             "base": "callback",
             "query_data": self.query_data,
             "user_id": self.user.id,
             "user_name": self.user.username,
             "chat_id": self.chat_id,
         }
+        super().__init__(log_labels=log_labels)
 
     async def __aenter__(self):
         await self.query.answer()

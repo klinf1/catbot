@@ -12,6 +12,7 @@ class DbPreyConfig(DbBrowser, LoggingCommand):
 
     def __init__(self) -> None:
         super().__init__()
+        self.log_labels = {"handler": self.__class__.__name__}
 
     def refresh(self):
         self.session.refresh(Prey)

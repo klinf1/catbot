@@ -175,9 +175,11 @@ class SystemTextCommand(LoggingCommand):
     def __init__(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         self.update = update
         self.context = context
-        self.log_labels = {
-            "handler": self.__class__.__name__,
-        }
+        super().__init__(
+            log_labels={
+                "handler": self.__class__.__name__,
+            }
+        )
 
     @property
     def job_id(self) -> str:

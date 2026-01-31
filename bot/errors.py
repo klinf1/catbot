@@ -8,7 +8,7 @@ class ErrorHandler(LoggingCommand):
         self.context = context
         self.dev_id: int = int(dev_id)
         self.exc_dict: dict = context.chat_data.get("exc", {}) if context.chat_data else {}  # type: ignore
-        self.log_labels = {"base": "error_handlers"}
+        super().__init__(log_labels={"base": "error_handlers"})
 
     @property
     def error_dict(self):

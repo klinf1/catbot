@@ -20,6 +20,8 @@ class HerbUser(DbBrowser, LoggingCommand):
         self.char = self.select_one(select(Characters).where(Characters.name == self.char_name))
         self.territory = self.select_one(select(Clans).where(Clans.name == territory)) if territory else None
         self.herb = self.get_herb()
+        self.log_labels = {"handler": self.__class__.__name__}
+        self.log_extras = {"char_name": char_name, "terr": territory}
 
     def gather(self) -> tuple[Herbs | None, bool]:
         return self.herb, self.check_success()

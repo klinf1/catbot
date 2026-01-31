@@ -29,6 +29,8 @@ class Hunt(DbBrowser, LoggingCommand):
         self.territory = territory
         self.char_name = char_name
         self.char_config = DbCharacterConfig(admin="db/hunt")
+        self.log_labels = {"handler": self.__class__.__name__}
+        self.log_extras = {"char_name": char_name, "terr": territory}
 
     def hunt(self) -> tuple[Prey | None, bool]:
         self.char = self.get_char()
