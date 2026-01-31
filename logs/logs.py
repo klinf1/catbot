@@ -11,7 +11,7 @@ load_dotenv()
 
 
 def set_up_logger(logger_name):
-    path = os.getenv("LOG_PATH")
+    path = os.getenv("LOG_PATH", "files/")
     file_name = f"{path}main.log"
     logger = logging.getLogger(logger_name)
     logger.setLevel(logging.DEBUG)
