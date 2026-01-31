@@ -29,13 +29,17 @@ def set_up_logger(logger_name):
 
 def set_up_logger_linux():
     url, user, passw = os.environ["GRAPHANA_URL"], os.environ["GRAPHANA_USER"], os.environ["GRAPHANA_PASS"]
+    if os.environ["TEST_MODE"].lower() == "true":
+        env = "test"
+    else:
+        env = "prod"
     logger = LokiLogger(
         baseUrl=url,
         auth=(
             user,
             passw,  # type: ignore
         ),
-        labels={"app": "catbot", "env": "test"},
+        labels={"app": "catbot", "env": env},
     )
     return logger
 
