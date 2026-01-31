@@ -15,7 +15,7 @@ class LoggingCommand:
 
     def write_log(
         self,
-        level: Literal["debug", "info", "warning", "error", "exception"],
+        level: Literal["debug", "info", "warn", "error", "exception"],
         message: str,
         extras: dict = {},
         labels: dict = {},
